@@ -51,6 +51,10 @@ Motivo: framework único para frontend e backend reduz superfície de manutenç�
 
 Alternativa descartada por ora: separar frontend/API completamente (faria sentido se/quando o sistema virar produto multi-tenant — a lógica de negócio já fica isolada o suficiente para essa extração futura não exigir reescrita).
 
+### Ambiente de desenvolvimento local
+
+Desenvolvimento local via **Docker Desktop**, com `docker-compose` reproduzindo os mesmos serviços do Railway (app Next.js + PostgreSQL na mesma versão usada em produção), para eliminar divergência entre "funciona local" e "funciona no Railway". Variáveis de ambiente (`.env`) espelham os nomes usados no Railway, trocando só os valores (local aponta pro Postgres do container, produção aponta pro Postgres gerenciado do Railway). Migrations de banco (schema) rodam do mesmo jeito nos dois ambientes, via ferramenta de migração versionada (ex: Prisma Migrate ou Drizzle Kit) — nunca alteração manual de schema direto no banco de produção.
+
 ```mermaid
 graph TB
     subgraph Cliente["Cliente (celular/desktop)"]
