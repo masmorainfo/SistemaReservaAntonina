@@ -41,9 +41,15 @@ Cada pacote fechado: cliente escolhe 3 entradas + 4 pratos principais + sobremes
 
 ## Arquitetura técnica
 
-**Stack escolhida:** Next.js (React) + PostgreSQL via Supabase (inclui autenticação para os perfis admin e realtime para disponibilidade) + hospedagem Vercel/Supabase.
+**Stack escolhida:** Next.js (React) + PostgreSQL gerenciado, hospedados no **Railway** (app + banco no mesmo provedor). Autenticação dos perfis admin (Dono/Recepção) via **Auth.js (NextAuth)**, com sessões e permissões guardadas no próprio Postgres.
 
-Motivo: framework único para frontend e backend reduz superfície de manutenção para um restaurante único; PWA e SEO nativos ajudam o tráfego vindo do Instagram; Supabase resolve autenticação e realtime sem construir do zero. Alternativa descartada por ora: separar frontend/API completamente (faria sentido se/quando o sistema virar produto multi-tenant — a lógica de negócio já fica isolada o suficiente para essa extração futura não exigir reescrita).
+Motivo: framework único para frontend e backend reduz superfície de manutenção para um restaurante único; PWA e SEO nativos ajudam o tráfego vindo do Instagram. Railway foi escolhido no lugar da combinação Vercel+Supabase por consolidar app e banco num único provedor que a equipe já opera — Vercel e Supabase têm planos gratuitos atraentes na teoria, mas para uso comercial em produção exigem seus respectivos planos pagos (Vercel Pro + Supabase Pro, juntos girando em torno de US$45/mês) mesmo com tráfego baixo, enquanto o Railway cobra por uso real, o que tende a custar menos para o volume de um restaurante único — sem contar que evita gerenciar dois provedores/dois faturamentos separados.
+
+**O que isso substitui, sem perda funcional:**
+- **Autenticação:** Supabase Auth dava isso pronto; com Railway, a autenticação vira responsabilidade da aplicação via Auth.js — trabalho pequeno para apenas 2 perfis (Dono/Recepção), sem exigir serviço externo adicional.
+- **"Mesa fica indisponível na hora":** Supabase tinha Realtime pronto (websocket sobre mudanças no banco); esse recurso não é essencial para o caso de uso — a trava de condição de corrida já vive no banco (constraint único mesa+data) e a tela simplesmente busca disponibilidade atualizada ao tentar reservar, sem necessidade de uma camada de realtime dedicada.
+
+Alternativa descartada por ora: separar frontend/API completamente (faria sentido se/quando o sistema virar produto multi-tenant — a lógica de negócio já fica isolada o suficiente para essa extração futura não exigir reescrita).
 
 ```mermaid
 graph TB
@@ -66,7 +72,7 @@ graph TB
         D1[Dono - acesso total]
         D2[Recepção/Eventos - acesso limitado]
     end
-    subgraph Dados["Banco de dados (PostgreSQL / Supabase)"]
+    subgraph Dados["Banco de dados (PostgreSQL / Railway)"]
         E[(Mesas, Ambientes, Reservas, Pacotes, Pagamentos)]
     end
     A --> B1 & B2
