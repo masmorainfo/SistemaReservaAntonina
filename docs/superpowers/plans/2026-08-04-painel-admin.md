@@ -989,7 +989,7 @@ describe("PUT /api/admin/politica-cancelamento", () => {
 });
 ```
 
-**Atenção ao rodar este teste:** o segundo `it` de `PUT` apaga e recria **toda** a tabela `PoliticaCancelamento`, inclusive os tiers do seed da Fundação — é intencional para testar a rota isoladamente, mas depois de rodar `npm test` localmente será necessário rodar `npm run db:seed` novamente antes de continuar usando o ambiente de desenvolvimento manualmente.
+**Atenção ao rodar este teste:** o segundo `it` de `PUT` apaga e recria **toda** a tabela `PoliticaCancelamento`, inclusive os tiers do seed da Fundação — é intencional para testar a rota isoladamente. **Importante:** desde o fix da Fundação Técnica que protege a política de cancelamento configurada pelo admin, `prisma/seed.ts` só popula `PoliticaCancelamento` quando a tabela está vazia (`count === 0`) — rodar `npm run db:seed` de novo depois deste teste **não** restaura os tiers padrão, porque a tabela não está mais vazia (ficou com o tier de teste `diasMinimos: 9999`). Para voltar aos tiers padrão antes de continuar usando o ambiente manualmente, apague a tabela primeiro e só então rode o seed: `npx prisma db execute --stdin <<< 'DELETE FROM "PoliticaCancelamento";'` seguido de `npm run db:seed`.
 
 - [ ] **Step 2: Rodar os testes e confirmar que falham**
 
@@ -1535,6 +1535,6 @@ git commit -m "test: E2E de login e cancelamento manual de mesa pelo admin"
 - [ ] Acessar `/admin/mapa-do-dia` sem login redireciona para `/admin/login`
 - [ ] Usuário Recepção consegue cancelar mesa, ver eventos e editar sinal, mas não consegue salvar a política de cancelamento (campos desabilitados na UI e `403` se forçar a chamada da API)
 - [ ] Usuário Dono consegue tudo o que Recepção consegue, mais editar e salvar a política de cancelamento
-- [ ] `npm run db:seed` foi rodado por último antes de considerar o ambiente pronto para demonstração (garante que a política de cancelamento está com os valores padrão, não os de teste)
+- [ ] A tabela `PoliticaCancelamento` está com os tiers padrão, não os de teste, antes de considerar o ambiente pronto para demonstração — como o seed só popula a tabela quando ela está vazia (ver nota na Task correspondente acima), rodar `npm run db:seed` sozinho **não** limpa um tier de teste deixado por engano; se necessário, apague a tabela antes (`npx prisma db execute --stdin <<< 'DELETE FROM "PoliticaCancelamento";'`) e então rode o seed
 
 Com os quatro planos da Fase 1 completos (Fundação, Reserva de Mesa Diária, Reserva de Evento, Painel Admin), o sistema tem um núcleo funcional de ponta a ponta: cliente reserva mesa ou evento, paga (mock), e a equipe opera tudo pelo painel. A Fase 2 (WhatsApp real, gateway de pagamento real, Mattertags reais) entra como evolução sobre essa base, sem precisar reabrir nenhuma decisão de arquitetura — é só trocar as implementações por trás dos adaptadores já definidos na Fundação.
