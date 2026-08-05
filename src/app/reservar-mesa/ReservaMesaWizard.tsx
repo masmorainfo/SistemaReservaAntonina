@@ -45,6 +45,8 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
         return;
       }
       setHorarios(corpo.horarios);
+    } catch {
+      setErro("não foi possível conectar ao servidor para buscar horários");
     } finally {
       setCarregando(false);
     }
@@ -62,6 +64,8 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
         return;
       }
       setMesasDisponiveis(corpo.mesas);
+    } catch {
+      setErro("não foi possível conectar ao servidor para buscar mesas");
     } finally {
       setCarregando(false);
     }
@@ -110,6 +114,8 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
       }
 
       setEtapa("confirmado");
+    } catch {
+      setErro("não foi possível conectar ao servidor para confirmar a reserva");
     } finally {
       setCarregando(false);
     }
@@ -176,13 +182,12 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
       {etapa === "onde" && (
         <fieldset>
           <legend>Onde você quer sentar?</legend>
-          <div role="tablist">
+          <div role="group" aria-label="Escolha o ambiente">
             {ambientes.map((ambiente) => (
               <button
                 key={ambiente.id}
                 type="button"
-                role="tab"
-                aria-selected={ambiente.id === ambienteSelecionadoId}
+                aria-pressed={ambiente.id === ambienteSelecionadoId}
                 onClick={() => trocarAmbiente(ambiente.id)}
               >
                 {ambiente.nome}
