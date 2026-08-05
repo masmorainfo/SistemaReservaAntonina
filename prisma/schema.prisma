@@ -56,12 +56,19 @@ model Mesa {
   capacidadeLugares Int
   posicaoTour       String?
   ativa             Boolean       @default(true)
+  // Dias da semana em que este registro de Mesa está ativo (0=domingo .. 6=sábado).
+  // Usado pelas mesas duplas do Deck (11, 12, 21): um conjunto de registros para
+  // domingo-quinta e outro para sexta/sábado, nunca ativos ao mesmo tempo.
+  diasSemanaAtivos  Int[]         @default([0, 1, 2, 3, 4, 5, 6])
   ambiente          Ambiente      @relation(fields: [ambienteId], references: [id])
   ambienteId        String
   reservas          ReservaMesa[]
   createdAt         DateTime      @default(now())
 
-  @@unique([ambienteId, numero])
+  // Não é mais @@unique: o mesmo número pode existir em dois conjuntos de
+  // registros (padrão vs. sexta/sábado) do mesmo Ambiente, em dias diferentes.
+  // A não-sobreposição é garantida pelo cadastro no admin, não pelo banco.
+  @@index([ambienteId, numero])
 }
 
 model ReservaMesa {

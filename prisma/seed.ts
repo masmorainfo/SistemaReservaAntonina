@@ -22,6 +22,26 @@ function obterSenhaAdmin(): string {
   return SENHA_ADMIN_FALLBACK_DEV;
 }
 
+// Mesa não tem mais @@unique([ambienteId, numero]) (virou @@index, ver
+// prisma/schema.prisma) porque as mesas duplas do Deck podem ter o mesmo
+// número em dois registros distintos (padrão vs. sexta/sábado). Por isso o
+// seed não pode mais usar prisma.mesa.upsert com a chave composta gerada
+// (ambienteId_numero) — ela deixou de existir. Criamos apenas se não houver
+// nenhuma Mesa com esse ambienteId+numero ainda.
+async function criarMesaSeNaoExistir(params: {
+  ambienteId: string;
+  numero: string;
+  capacidadeLugares: number;
+}): Promise<void> {
+  const existente = await prisma.mesa.findFirst({
+    where: { ambienteId: params.ambienteId, numero: params.numero },
+  });
+
+  if (!existente) {
+    await prisma.mesa.create({ data: params });
+  }
+}
+
 async function main() {
   const deck = await prisma.ambiente.upsert({
     where: { nome: "Deck" },
@@ -41,22 +61,18 @@ async function main() {
     create: { nome: "Mezanino" },
   });
 
-  await prisma.mesa.upsert({
-    where: { ambienteId_numero: { ambienteId: deck.id, numero: "D01" } },
-    update: {},
-    create: { ambienteId: deck.id, numero: "D01", capacidadeLugares: 4 },
+  await criarMesaSeNaoExistir({ ambienteId: deck.id, numero: "D01", capacidadeLugares: 4 });
+
+  await criarMesaSeNaoExistir({
+    ambienteId: salaoPrincipal.id,
+    numero: "03",
+    capacidadeLugares: 6,
   });
 
-  await prisma.mesa.upsert({
-    where: { ambienteId_numero: { ambienteId: salaoPrincipal.id, numero: "03" } },
-    update: {},
-    create: { ambienteId: salaoPrincipal.id, numero: "03", capacidadeLugares: 6 },
-  });
-
-  await prisma.mesa.upsert({
-    where: { ambienteId_numero: { ambienteId: mezanino.id, numero: "M01" } },
-    update: {},
-    create: { ambienteId: mezanino.id, numero: "M01", capacidadeLugares: 12 },
+  await criarMesaSeNaoExistir({
+    ambienteId: mezanino.id,
+    numero: "M01",
+    capacidadeLugares: 12,
   });
 
   await prisma.pacote.upsert({
