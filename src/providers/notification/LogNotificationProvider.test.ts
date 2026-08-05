@@ -6,8 +6,8 @@ describe("LogNotificationProvider", () => {
     const provider = new LogNotificationProvider();
     await provider.enviar({ telefone: "+5541999999999", mensagem: "Reserva confirmada" });
 
-    expect(provider.enviados).toHaveLength(1);
-    expect(provider.enviados[0]).toEqual({
+    expect(provider.obterEnviados()).toHaveLength(1);
+    expect(provider.obterEnviados()[0]).toEqual({
       telefone: "+5541999999999",
       mensagem: "Reserva confirmada",
     });

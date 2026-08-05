@@ -75,6 +75,10 @@ model ReservaMesa {
   numPessoas     Int
   status         StatusReservaMesa @default(CONFIRMADA)
   createdAt      DateTime          @default(now())
+
+  // Consulta mais comum do admin: "reservas de hoje" / faixa de datas.
+  // O índice único parcial existente começa por mesaId, então não cobre isso.
+  @@index([data])
 }
 
 model Pacote {

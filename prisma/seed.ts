@@ -1,7 +1,26 @@
 import { PrismaClient } from "@prisma/client";
-import bcrypt from "bcryptjs";
+import { hashSenha } from "../src/lib/auth/password";
+import { POLITICA_CANCELAMENTO_PADRAO } from "../src/lib/domain/refundPolicy";
 
 const prisma = new PrismaClient();
+
+const SENHA_ADMIN_FALLBACK_DEV = "trocar-esta-senha";
+
+function obterSenhaAdmin(): string {
+  const senha = process.env.SEED_ADMIN_SENHA;
+
+  if (senha) {
+    return senha;
+  }
+
+  if (process.env.NODE_ENV === "production") {
+    throw new Error(
+      "SEED_ADMIN_SENHA é obrigatória em produção. Defina a variável de ambiente antes de rodar o seed."
+    );
+  }
+
+  return SENHA_ADMIN_FALLBACK_DEV;
+}
 
 async function main() {
   const deck = await prisma.ambiente.upsert({
@@ -64,18 +83,17 @@ async function main() {
     create: { nome: "Cardápio Aberto", precoPessoa: null, taxaServicoPct: 10.0 },
   });
 
-  const tiers: Array<{ diasMinimos: number; diasMaximos: number | null; percentualReembolso: number }> = [
-    { diasMinimos: 15, diasMaximos: null, percentualReembolso: 100 },
-    { diasMinimos: 8, diasMaximos: 14, percentualReembolso: 75 },
-    { diasMinimos: 4, diasMaximos: 7, percentualReembolso: 50 },
-    { diasMinimos: 2, diasMaximos: 3, percentualReembolso: 25 },
-    { diasMinimos: 0, diasMaximos: 1, percentualReembolso: 0 },
-  ];
+  // A política é editável pelo admin sem deploy; só semeia se estiver vazia,
+  // para não sobrescrever customizações ao rodar o seed novamente.
+  const politicasExistentes = await prisma.politicaCancelamento.count();
 
-  await prisma.politicaCancelamento.deleteMany();
-  await prisma.politicaCancelamento.createMany({ data: tiers });
+  if (politicasExistentes === 0) {
+    await prisma.politicaCancelamento.createMany({ data: POLITICA_CANCELAMENTO_PADRAO });
+  } else {
+    console.log("Política de cancelamento já configurada — mantida sem alterações.");
+  }
 
-  const senhaHash = await bcrypt.hash("trocar-esta-senha", 10);
+  const senhaHash = await hashSenha(obterSenhaAdmin());
   await prisma.adminUser.upsert({
     where: { email: "dono@antoninaosteria.com" },
     update: {},
