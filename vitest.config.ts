@@ -2,7 +2,7 @@ import { defineConfig } from "vitest/config";
 import path from "node:path";
 import { config as loadEnv } from "dotenv";
 
-loadEnv();
+loadEnv({ quiet: true });
 
 export default defineConfig({
   test: {
