@@ -1,0 +1,12 @@
+node_modules
+.next
+.git
+*.log
+.env
+.env.*
+!.env.example
+.claude
+.superpowers
+docs
+*.pdf
+*.md

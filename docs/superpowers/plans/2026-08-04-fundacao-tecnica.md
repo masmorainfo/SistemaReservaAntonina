@@ -1613,6 +1613,8 @@ git commit -m "feat: integra Auth.js com autenticação de admin via credenciais
 
 ## Checklist final da fundação
 
+**Atenção:** se você já subiu o stack antes (mesmo com uma versão quebrada do `Dockerfile.dev`), rode `docker compose down` antes de `--build` — o volume anônimo de `node_modules` do container sobrevive a um rebuild simples e pode manter um Prisma Client desatualizado/quebrado mesmo depois de corrigir o Dockerfile.
+
 - [ ] `docker compose up -d --build` sobe `db` e `app` sem erro
 - [ ] `npm test` passa 100% (todas as Tasks 1-9)
 - [ ] `curl http://localhost:3000/api/health` retorna `{"status":"ok"}`
