@@ -144,3 +144,9 @@ model AdminUser {
   role      AdminRole
   createdAt DateTime  @default(now())
 }
+
+model Feriado {
+  id   String   @id @default(cuid())
+  data DateTime @unique @db.Date
+  nome String
+}
