@@ -8,13 +8,19 @@ describe("autenticarAdmin", () => {
   const senha = "senhaDeTeste123";
 
   beforeAll(async () => {
-    await prisma.adminUser.create({
-      data: {
-        nome: "Usuário de Teste",
-        email,
-        senhaHash: await hashSenha(senha),
-        role: "DONO",
-      },
+    const dados = {
+      nome: "Usuário de Teste",
+      email,
+      senhaHash: await hashSenha(senha),
+      role: "DONO" as const,
+    };
+
+    // upsert em vez de create: a fixture precisa ser idempotente caso uma
+    // execução anterior tenha sido interrompida antes do afterAll.
+    await prisma.adminUser.upsert({
+      where: { email },
+      update: dados,
+      create: dados,
     });
   });
 

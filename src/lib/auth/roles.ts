@@ -1,4 +1,9 @@
-export type AdminRole = "DONO" | "RECEPCAO";
+import type { $Enums } from "@prisma/client";
+
+// Derivado do enum gerado pelo Prisma (import type é apagado na compilação,
+// então não há dependência de runtime). Assim, adicionar um perfil no schema
+// quebra o type-check aqui em vez de passar despercebido.
+export type AdminRole = $Enums.AdminRole;
 
 export class AcessoNegadoError extends Error {
   constructor(role: AdminRole, permitido: AdminRole[]) {

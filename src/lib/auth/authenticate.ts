@@ -29,6 +29,6 @@ export async function autenticarAdmin(
     id: usuario.id,
     nome: usuario.nome,
     email: usuario.email,
-    role: usuario.role as AdminRole,
+    role: usuario.role,
   };
 }

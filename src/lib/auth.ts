@@ -3,6 +3,9 @@ import Credentials from "next-auth/providers/credentials";
 import { autenticarAdmin } from "@/lib/auth/authenticate";
 
 export const { handlers, auth, signIn, signOut } = NextAuth({
+  // Railway termina o TLS e faz proxy interno; sem isso o Auth.js rejeita
+  // as requisições em produção por não confiar no cabeçalho Host.
+  trustHost: true,
   session: { strategy: "jwt" },
   providers: [
     Credentials({
@@ -36,13 +39,13 @@ export const { handlers, auth, signIn, signOut } = NextAuth({
   callbacks: {
     async jwt({ token, user }) {
       if (user) {
-        token.role = (user as { role: string }).role;
+        token.role = user.role;
       }
       return token;
     },
     async session({ session, token }) {
       if (session.user) {
-        (session.user as { role?: string }).role = token.role as string;
+        session.user.role = token.role;
       }
       return session;
     },
