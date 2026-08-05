@@ -5,6 +5,9 @@ export default defineConfig({
   test: {
     environment: "node",
     globals: true,
+    // Os testes de integração compartilham o banco de dev; execução sequencial
+    // evita colisões entre arquivos de teste que gravam nas mesmas tabelas.
+    fileParallelism: false,
   },
   resolve: {
     alias: {

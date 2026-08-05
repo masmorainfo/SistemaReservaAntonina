@@ -1,7 +1,12 @@
 FROM node:20-alpine
 WORKDIR /app
 COPY package*.json ./
+# O schema precisa existir antes do npm install: o postinstall do @prisma/client
+# roda `prisma generate` e sem o schema instala um client stub quebrado.
+COPY prisma ./prisma
 RUN npm install
 COPY . .
+# Rede de segurança: regenera o client caso o schema mude entre builds.
+RUN npx prisma generate
 EXPOSE 3000
 CMD ["npm", "run", "dev"]
