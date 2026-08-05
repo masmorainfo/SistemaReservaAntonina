@@ -5,3 +5,7 @@ node_modules
 next-env.d.ts
 tsconfig.tsbuildinfo
 .claude/worktrees
+test-results
+playwright-report
+blob-report
+playwright/.cache

@@ -14,7 +14,10 @@ export default defineConfig({
     // Os testes de integração compartilham o banco de dev; execução sequencial
     // evita colisões entre arquivos de teste que gravam nas mesmas tabelas.
     fileParallelism: false,
-    exclude: ["**/node_modules/**", "**/.claude/worktrees/**"],
+    // e2e/** roda via Playwright (npm run test:e2e), não via Vitest — os
+    // specs usam test.describe() do @playwright/test, incompatível com o
+    // runner do Vitest.
+    exclude: ["**/node_modules/**", "**/.claude/worktrees/**", "**/e2e/**"],
   },
   resolve: {
     alias: {
