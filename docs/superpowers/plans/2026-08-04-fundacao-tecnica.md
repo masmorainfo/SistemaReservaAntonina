@@ -407,12 +407,13 @@ model Mesa {
   capacidadeLugares Int
   posicaoTour       String?
   ativa             Boolean       @default(true)
+  diasSemanaAtivos  Int[]         @default([0, 1, 2, 3, 4, 5, 6])
   ambiente          Ambiente      @relation(fields: [ambienteId], references: [id])
   ambienteId        String
   reservas          ReservaMesa[]
   createdAt         DateTime      @default(now())
 
-  @@unique([ambienteId, numero])
+  @@index([ambienteId, numero])
 }
 
 model ReservaMesa {
@@ -487,6 +488,8 @@ model AdminUser {
 ```
 
 **Nota deliberada:** não existem modelos `Account`/`Session`/`VerificationToken` do Auth.js — a autenticação usa estratégia JWT (Task 9), sem adapter de banco para sessão, então essas tabelas não são necessárias e reduziriam o schema à toa se fossem adicionadas agora.
+
+**Por que `Mesa.diasSemanaAtivos` existe e por que `@@unique([ambienteId, numero])` virou `@@index`:** o Deck tem mesas duplas (11, 12 e 21) que a equipe separa fisicamente às sextas e sábados, virando 6 mesas de 2 lugares — e a numeração de *todo* o lado afetado é reordenada nesses dias (ver documento de design, seção "Alocação de mesa por capacidade"). Isso significa que o mesmo número (ex: "16") identifica uma mesa física diferente dependendo do dia da semana. Em vez de modelar uma identidade física estável por trás do número — o que exigiria uma tabela de junção e lógica de merge/split em tempo de reserva — o cadastro do Deck ganha dois conjuntos completos de registros de `Mesa` (um "padrão", ativo domingo-quinta, outro "sexta/sábado"), cada um com `diasSemanaAtivos` apontando para os dias em que está disponível; os dois conjuntos nunca ficam ativos ao mesmo tempo. Isso obriga a relaxar a unicidade de `(ambienteId, numero)` — o mesmo número pode existir nos dois conjuntos — a não-sobreposição de dias fica garantida pelo cadastro no admin, não por uma constraint de banco (baixo volume de mudança nesse cadastro, não compensa uma exclusion constraint agora). Ambientes sem mesa dupla (Salão Principal, Mezanino) simplesmente deixam `diasSemanaAtivos` no valor padrão (todos os dias).
 
 - [ ] **Step 3: Gerar a migração inicial sem aplicar ainda**
 

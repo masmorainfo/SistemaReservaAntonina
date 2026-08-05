@@ -186,13 +186,48 @@ flowchart TD
 
 ## Alocação de mesa por capacidade
 
-Achados da exploração do tour Matterport (dollhouse + planta + caminhada): pelo menos três portes fixos de mesa existem no restaurante — mesas de ~4 lugares (deck e janelas do salão), mesas de ~5-6 lugares com banquetas (salão principal, já numeradas fisicamente: 03, 04...), e uma mesa comunal de ~12 lugares (mezanino, dia a dia). Como as mesas são físicas e fixas (sem adicionar/remover cadeiras), o sistema precisa evitar que um grupo pequeno ocupe uma mesa grande por padrão:
+**Inventário confirmado pela equipe do restaurante** (substitui a estimativa visual anterior feita a partir do tour Matterport). Como as mesas são físicas e fixas (sem adicionar/remover cadeiras, exceto o caso das mesas duplas do Deck descrito abaixo), o sistema precisa evitar que um grupo pequeno ocupe uma mesa grande por padrão:
 
-- Ao informar o número de pessoas, o cliente só vê mesas dentro de uma **faixa de encaixe aceitável** (ex: grupo de 2 vê mesas de 2-4 lugares, não vê mesas de 6 ou 12).
+- Ao informar o número de pessoas, o cliente só vê mesas dentro de uma **faixa de encaixe aceitável** (ex: grupo de 2 vê mesas de 2-4 lugares, não vê mesas de 6 ou 12+).
 - Se não houver mesa na faixa ideal disponível no horário, o sistema libera a próxima faixa acima como opção secundária, com aviso.
 - A equipe sempre pode alocar manualmente fora da regra pelo painel admin (ex: noite vazia).
 
-**Pendência de implementação (não é dúvida de design):** o inventário exato de mesas x capacidade precisa ser confirmado pela equipe do restaurante antes do cadastro final — a exploração do tour deu a direção certa, mas não uma contagem certificada cadeira por cadeira.
+### Deck — modo padrão (domingo a quinta)
+
+8 mesas de 4 lugares:
+
+| Lado | Mesas |
+|---|---|
+| Esquerdo | 11, 12, 14, 15 |
+| Direito | 16, 17, 20, 21 |
+
+### Deck — modo sexta/sábado (mesas duplas separadas)
+
+As mesas 11, 12 e 21 são fisicamente **mesas duplas** (duas mesas de 2 lugares unidas), servidas como mesa única de 4 lugares de domingo a quinta. Na sexta e no sábado a equipe as separa, virando 6 mesas individuais de 2 lugares — e a numeração de **todo o lado afetado** é reordenada sequencialmente para refletir a nova contagem física (não é só a mesa dupla que muda de número; as mesas fixas vizinhas também deslocam de posição na sequência):
+
+| Lado | Mesas (2 lugares) | Mesas (4 lugares, só renumeradas) |
+|---|---|---|
+| Esquerdo | 11, 12, 14, 15 (das duplas 11+12 separadas) | 16, 17 (eram as mesas 14 e 15 do modo padrão) |
+| Direito | 23, 24 (da dupla 21 separada) | 20, 21, 22 (eram as mesas 16, 17 e 20 do modo padrão) |
+
+11 mesas no total no modo sexta/sábado, contra 8 no modo padrão.
+
+**Implicação técnica:** o mesmo número de mesa (ex: "16") identifica uma mesa física diferente dependendo do dia da semana. Em vez de tentar manter uma identidade física estável por trás do número, o cadastro de `Mesa` (Fundação Técnica) ganha um campo `diasSemanaAtivos` — o Deck passa a ter dois conjuntos completos de registros de `Mesa` sob o mesmo `Ambiente` (um conjunto "padrão", ativo domingo-quinta, e um conjunto "sexta/sábado"), nunca ativos ao mesmo tempo. A consulta de disponibilidade (`buscarMesasDisponiveis`) passa a filtrar também pelo dia da semana da data pesquisada. Isso exige relaxar a restrição `@@unique([ambienteId, numero])` do modelo `Mesa` para um índice não-único, já que o mesmo número pode existir nos dois conjuntos — a garantia de que os dois conjuntos nunca se sobrepõem no mesmo dia fica a cargo do cadastro no admin, não de uma constraint de banco (baixo volume de mudança, YAGNI evitar uma exclusion constraint por enquanto).
+
+### Salão Principal
+
+| Localização | Mesas | Capacidade |
+|---|---|---|
+| Frente à adega | 01, 02 | 4 lugares cada |
+| Frente aos quadros/sofá (booth) | 03, 04, 05 | 6 lugares cada (4 cadeiras + sofá de 2 lugares) |
+| Frente ao bar/caixa (pares parede-lado) | 06↔07, 08↔18, 09↔19 | 2 lugares cada (6 mesas) |
+| Mesa oval central | 10 | 12 a 14 lugares |
+
+12 mesas no total no Salão Principal.
+
+### Mezanino
+
+Ainda **não confirmado oficialmente** pela equipe do restaurante — permanece como estimativa visual do tour Matterport (ver nota no NotebookLM do projeto): um nicho com pelo menos 2 mesas redondas de 4 lugares e uma área aberta com mesa comunal longa cuja capacidade parece maior que a estimativa inicial de ~12 lugares (possivelmente 16-20). Como o Mezanino não participa do fluxo de reserva de mesa diária (ver suposição 1 do plano `2026-08-04-reserva-mesa-diaria.md`), essa confirmação não bloqueia a Fase 1.
 
 ## Adaptadores plugáveis
 
@@ -266,7 +301,7 @@ Configurável no admin (tabela `POLITICA_CANCELAMENTO`), sem necessidade de depl
 ## Pendências para fechar antes ou durante a implementação
 
 1. Revisão jurídica da tabela de cancelamento e do texto de ciência sobre o Art. 49 do CDC.
-2. Inventário definitivo de mesas × capacidade × ambiente, confirmado pela equipe do restaurante.
+2. ~~Inventário definitivo de mesas × capacidade × ambiente~~ — **Deck e Salão Principal confirmados** pela equipe do restaurante em 04/08/2026 (ver seção "Alocação de mesa por capacidade"). Mezanino ainda pendente, mas não bloqueia a Fase 1 (fora do fluxo de mesa diária).
 3. Liberação do acesso admin ao Matterport (dependente da aprovação do contrato com a Realia) para migrar do fallback para Mattertags reais.
 4. Escolha do gateway de pagamento real e criação da conta correspondente (Fase 2).
 5. Contratação da API oficial do WhatsApp Business / provedor (Fase 2).
