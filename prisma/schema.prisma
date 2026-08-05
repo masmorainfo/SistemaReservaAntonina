@@ -1,0 +1,135 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum AdminRole {
+  DONO
+  RECEPCAO
+}
+
+enum StatusReservaMesa {
+  CONFIRMADA
+  CANCELADA
+  NO_SHOW
+}
+
+enum TipoEvento {
+  CORPORATIVO
+  ANIVERSARIO
+  JANTAR_RESERVADO
+  OUTRO
+}
+
+enum StatusReservaEvento {
+  AGUARDANDO_PAGAMENTO
+  CONFIRMADA
+  CANCELADA
+}
+
+enum MetodoPagamentoEnum {
+  PIX
+  CARTAO
+}
+
+enum StatusPagamento {
+  PENDENTE
+  APROVADO
+  RECUSADO
+}
+
+model Ambiente {
+  id              String   @id @default(cuid())
+  nome            String   @unique
+  mattertagRoomId String?
+  mesas           Mesa[]
+  createdAt       DateTime @default(now())
+}
+
+model Mesa {
+  id                String        @id @default(cuid())
+  numero            String
+  capacidadeLugares Int
+  posicaoTour       String?
+  ativa             Boolean       @default(true)
+  ambiente          Ambiente      @relation(fields: [ambienteId], references: [id])
+  ambienteId        String
+  reservas          ReservaMesa[]
+  createdAt         DateTime      @default(now())
+
+  @@unique([ambienteId, numero])
+}
+
+model ReservaMesa {
+  id             String            @id @default(cuid())
+  mesa           Mesa              @relation(fields: [mesaId], references: [id])
+  mesaId         String
+  nomeCliente    String
+  telefone       String
+  data           DateTime          @db.Date
+  horarioChegada String
+  numPessoas     Int
+  status         StatusReservaMesa @default(CONFIRMADA)
+  createdAt      DateTime          @default(now())
+}
+
+model Pacote {
+  id             String          @id @default(cuid())
+  nome           String          @unique
+  precoPessoa    Decimal?        @db.Decimal(10, 2)
+  taxaServicoPct Decimal         @db.Decimal(5, 2) @default(10.00)
+  reservasEvento ReservaEvento[]
+  createdAt      DateTime        @default(now())
+}
+
+model ReservaEvento {
+  id               String              @id @default(cuid())
+  clienteNome      String
+  clienteTelefone  String
+  clienteEmail     String
+  tipoEvento       TipoEvento
+  data             DateTime            @db.Date
+  numConvidados    Int
+  pacote           Pacote?             @relation(fields: [pacoteId], references: [id])
+  pacoteId         String?
+  cardapioAberto   Boolean             @default(false)
+  equipamentoTelao Boolean             @default(false)
+  valorTotal       Decimal             @db.Decimal(10, 2)
+  percentualSinal  Decimal             @db.Decimal(5, 2) @default(100.00)
+  status           StatusReservaEvento @default(AGUARDANDO_PAGAMENTO)
+  holdExpiresAt    DateTime?
+  pratosEscolhidos Json?
+  pagamento        Pagamento?
+  createdAt        DateTime            @default(now())
+}
+
+model Pagamento {
+  id              String              @id @default(cuid())
+  reservaEvento   ReservaEvento       @relation(fields: [reservaEventoId], references: [id])
+  reservaEventoId String              @unique
+  provedor        String
+  metodo          MetodoPagamentoEnum
+  valor           Decimal             @db.Decimal(10, 2)
+  status          StatusPagamento     @default(PENDENTE)
+  createdAt       DateTime            @default(now())
+}
+
+model PoliticaCancelamento {
+  id                  String  @id @default(cuid())
+  diasMinimos         Int
+  diasMaximos         Int?
+  percentualReembolso Decimal @db.Decimal(5, 2)
+}
+
+model AdminUser {
+  id        String    @id @default(cuid())
+  nome      String
+  email     String    @unique
+  senhaHash String
+  role      AdminRole
+  createdAt DateTime  @default(now())
+}
