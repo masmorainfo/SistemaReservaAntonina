@@ -1,5 +1,8 @@
 import { defineConfig } from "vitest/config";
 import path from "node:path";
+import { config as loadEnv } from "dotenv";
+
+loadEnv();
 
 export default defineConfig({
   test: {
@@ -8,6 +11,7 @@ export default defineConfig({
     // Os testes de integração compartilham o banco de dev; execução sequencial
     // evita colisões entre arquivos de teste que gravam nas mesmas tabelas.
     fileParallelism: false,
+    exclude: ["**/node_modules/**", "**/.claude/worktrees/**"],
   },
   resolve: {
     alias: {

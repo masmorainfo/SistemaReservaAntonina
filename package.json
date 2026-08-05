@@ -29,11 +29,21 @@
     "@types/node": "^20.14.0",
     "@types/react": "^18.3.0",
     "@types/react-dom": "^18.3.0",
+    "dotenv": "^17.4.2",
     "eslint": "^8.57.0",
     "eslint-config-next": "^15.5.22",
     "prisma": "^6.19.3",
     "tsx": "^4.23.6",
     "typescript": "^5.5.0",
     "vitest": "^1.6.0"
+  },
+  "allowScripts": {
+    "esbuild@0.21.5": true,
+    "esbuild@0.28.1": true,
+    "prisma@6.19.3": true,
+    "sharp@0.34.5": true,
+    "unrs-resolver@1.12.2": true,
+    "@prisma/client@6.19.3": true,
+    "@prisma/engines@6.19.3": true
   }
 }
