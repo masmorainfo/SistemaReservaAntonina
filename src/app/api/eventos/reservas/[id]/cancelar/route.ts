@@ -16,8 +16,10 @@ function diasEntre(dataEvento: Date, agora: Date): number {
   return Math.max(0, Math.floor(diffMs / (1000 * 60 * 60 * 24)));
 }
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
-  const reserva = await prisma.reservaEvento.findUnique({ where: { id: params.id } });
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
+  const reserva = await prisma.reservaEvento.findUnique({ where: { id } });
 
   if (!reserva) {
     return NextResponse.json({ erro: "reserva não encontrada" }, { status: 404 });
@@ -33,7 +35,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   const valorReembolso = Math.round(Number(reserva.valorTotal) * (percentualReembolso / 100) * 100) / 100;
 
   const atualizada = await prisma.reservaEvento.update({
-    where: { id: params.id },
+    where: { id },
     data: {
       status: "CANCELADA",
       percentualReembolsoAplicado: percentualReembolso,

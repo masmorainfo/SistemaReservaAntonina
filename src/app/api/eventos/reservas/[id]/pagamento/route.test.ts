@@ -1,8 +1,10 @@
-import { describe, it, expect, beforeAll, afterAll } from "vitest";
+import { describe, it, expect, beforeAll, afterAll, afterEach, vi } from "vitest";
 import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { POST } from "./route";
 import { daquiADias } from "@/test-utils/datas";
+import { MockPaymentProvider } from "@/providers/payment/MockPaymentProvider";
+import * as getPaymentProviderModule from "@/providers/payment/getPaymentProvider";
 
 describe("POST /api/eventos/reservas/[id]/pagamento", () => {
   let pacoteId: string;
@@ -18,6 +20,10 @@ describe("POST /api/eventos/reservas/[id]/pagamento", () => {
     await prisma.pagamento.deleteMany({ where: { reservaEvento: { pacoteId } } });
     await prisma.reservaEvento.deleteMany({ where: { pacoteId } });
     await prisma.pacote.delete({ where: { id: pacoteId } });
+  });
+
+  afterEach(() => {
+    vi.restoreAllMocks();
   });
 
   async function criarHold(data: Date, holdExpiresAt: Date) {
@@ -46,7 +52,7 @@ describe("POST /api/eventos/reservas/[id]/pagamento", () => {
       body: JSON.stringify({ metodo: "pix" }),
     });
 
-    const response = await POST(request, { params: { id: reserva.id } });
+    const response = await POST(request, { params: Promise.resolve({ id: reserva.id }) });
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -62,7 +68,7 @@ describe("POST /api/eventos/reservas/[id]/pagamento", () => {
       body: JSON.stringify({ metodo: "pix" }),
     });
 
-    const response = await POST(request, { params: { id: reserva.id } });
+    const response = await POST(request, { params: Promise.resolve({ id: reserva.id }) });
     expect(response.status).toBe(410);
   });
 
@@ -74,7 +80,7 @@ describe("POST /api/eventos/reservas/[id]/pagamento", () => {
       body: JSON.stringify({ metodo: "pix" }),
     });
 
-    const response = await POST(request, { params: { id: reserva.id } });
+    const response = await POST(request, { params: Promise.resolve({ id: reserva.id }) });
     expect(response.status).toBe(400);
   });
 
@@ -86,7 +92,7 @@ describe("POST /api/eventos/reservas/[id]/pagamento", () => {
       body: JSON.stringify({ metodo: "pix" }),
     });
 
-    const response = await POST(request, { params: { id: reserva.id } });
+    const response = await POST(request, { params: Promise.resolve({ id: reserva.id }) });
     expect(response.status).toBe(200);
   });
 
@@ -98,7 +104,7 @@ describe("POST /api/eventos/reservas/[id]/pagamento", () => {
       body: JSON.stringify({ metodo: "pix" }),
     });
 
-    const response = await POST(request, { params: { id: reserva.id } });
+    const response = await POST(request, { params: Promise.resolve({ id: reserva.id }) });
     expect(response.status).toBe(400);
   });
 
@@ -110,7 +116,7 @@ describe("POST /api/eventos/reservas/[id]/pagamento", () => {
       body: JSON.stringify({ metodo: "pix", cienciaDireitoArrependimento: true }),
     });
 
-    const response = await POST(request, { params: { id: reserva.id } });
+    const response = await POST(request, { params: Promise.resolve({ id: reserva.id }) });
     expect(response.status).toBe(200);
   });
 
@@ -122,7 +128,27 @@ describe("POST /api/eventos/reservas/[id]/pagamento", () => {
       body: "isso não é JSON válido {",
     });
 
-    const response = await POST(request, { params: { id: reserva.id } });
+    const response = await POST(request, { params: Promise.resolve({ id: reserva.id }) });
     expect(response.status).toBe(400);
+  });
+
+  it("recusa o pagamento e cancela a reserva quando o provedor recusa", async () => {
+    vi.spyOn(getPaymentProviderModule, "getPaymentProvider").mockReturnValue(
+      new MockPaymentProvider("recusado")
+    );
+
+    const reserva = await criarHold(daquiADias(33), new Date(Date.now() + 10 * 60 * 1000));
+
+    const request = new NextRequest(`http://localhost/api/eventos/reservas/${reserva.id}/pagamento`, {
+      method: "POST",
+      body: JSON.stringify({ metodo: "pix" }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: reserva.id }) });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.pagamento.status).toBe("RECUSADO");
+    expect(body.reserva.status).toBe("CANCELADA");
   });
 });

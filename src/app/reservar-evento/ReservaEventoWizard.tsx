@@ -105,8 +105,13 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
       setReservaId(corpo.reserva.id);
       setValorTotal(Number(corpo.reserva.valorTotal));
 
-      const dataEvento = new Date(`${data}T00:00:00`);
-      const diasAteEvento = Math.floor((dataEvento.getTime() - Date.now()) / (1000 * 60 * 60 * 24));
+      const hoje = new Date();
+      hoje.setHours(0, 0, 0, 0);
+      const dataEventoMeiaNoite = new Date(`${data}T00:00:00`);
+      dataEventoMeiaNoite.setHours(0, 0, 0, 0);
+      const diasAteEvento = Math.round(
+        (dataEventoMeiaNoite.getTime() - hoje.getTime()) / (1000 * 60 * 60 * 24)
+      );
       setPrecisaCienciaCdc(diasAteEvento < 7);
 
       setEtapa("checkout");

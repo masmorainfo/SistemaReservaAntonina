@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
-import { MockPaymentProvider } from "@/providers/payment/MockPaymentProvider";
+import { getPaymentProvider } from "@/providers/payment/getPaymentProvider";
+import { paraMetodoPagamentoEnum, paraStatusPagamentoEnum } from "@/providers/payment/mappers";
 import type { MetodoPagamento } from "@/providers/payment/PaymentProvider";
 
 const DIAS_LIMITE_DIREITO_ARREPENDIMENTO = 7;
@@ -29,7 +31,9 @@ function diasAteEvento(dataEvento: Date, agora: Date): number {
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
 
-export async function POST(request: NextRequest, { params }: { params: { id: string } }) {
+export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
   let body: unknown;
   try {
     body = await request.json();
@@ -41,7 +45,7 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
     return NextResponse.json({ erro: "método de pagamento inválido" }, { status: 400 });
   }
 
-  const reserva = await prisma.reservaEvento.findUnique({ where: { id: params.id } });
+  const reserva = await prisma.reservaEvento.findUnique({ where: { id } });
 
   if (!reserva) {
     return NextResponse.json({ erro: "reserva não encontrada" }, { status: 404 });
@@ -73,32 +77,67 @@ export async function POST(request: NextRequest, { params }: { params: { id: str
   const valorSinal =
     Math.round(Number(reserva.valorTotal) * (Number(reserva.percentualSinal) / 100) * 100) / 100;
 
-  const provider = new MockPaymentProvider();
+  const provider = getPaymentProvider();
   const resultadoPagamento = await provider.iniciarPagamento({
     reservaEventoId: reserva.id,
     valor: valorSinal,
     metodo: body.metodo,
   });
 
-  const [pagamento, reservaAtualizada] = await prisma.$transaction([
-    prisma.pagamento.create({
-      data: {
-        reservaEventoId: reserva.id,
-        provedor: resultadoPagamento.provedor,
-        metodo: body.metodo === "pix" ? "PIX" : "CARTAO",
-        valor: valorSinal,
-        status: resultadoPagamento.status === "aprovado" ? "APROVADO" : "RECUSADO",
-      },
-    }),
-    prisma.reservaEvento.update({
-      where: { id: reserva.id },
-      data: {
-        status: resultadoPagamento.status === "aprovado" ? "CONFIRMADA" : "CANCELADA",
-        holdExpiresAt: null,
-        cienciaDireitoArrependimento: Boolean(body.cienciaDireitoArrependimento),
-      },
-    }),
-  ]);
+  try {
+    if (resultadoPagamento.status === "pendente") {
+      // Pagamento ainda em processamento (ex.: Pix aguardando confirmação
+      // assíncrona do gateway). Não é aprovação nem recusa final — a reserva
+      // permanece em AGUARDANDO_PAGAMENTO e o hold continua correndo.
+      const pagamento = await prisma.pagamento.create({
+        data: {
+          reservaEventoId: reserva.id,
+          provedor: resultadoPagamento.provedor,
+          metodo: paraMetodoPagamentoEnum(body.metodo),
+          valor: valorSinal,
+          status: paraStatusPagamentoEnum(resultadoPagamento.status),
+        },
+      });
 
-  return NextResponse.json({ pagamento, reserva: reservaAtualizada }, { status: 200 });
+      return NextResponse.json({ pagamento, reserva }, { status: 200 });
+    }
+
+    // TODO(fase-2): mover confirmação para o webhook do gateway real — hoje
+    // confirmamos direto no retorno de iniciarPagamento porque
+    // MockPaymentProvider é síncrono. PaymentProvider.iniciarPagamento
+    // documenta que a confirmação real só deve ocorrer após a validação do
+    // webhook do gateway.
+    const [pagamento, reservaAtualizada] = await prisma.$transaction([
+      prisma.pagamento.create({
+        data: {
+          reservaEventoId: reserva.id,
+          provedor: resultadoPagamento.provedor,
+          metodo: paraMetodoPagamentoEnum(body.metodo),
+          valor: valorSinal,
+          status: paraStatusPagamentoEnum(resultadoPagamento.status),
+        },
+      }),
+      prisma.reservaEvento.update({
+        where: { id: reserva.id },
+        data: {
+          status: resultadoPagamento.status === "aprovado" ? "CONFIRMADA" : "CANCELADA",
+          holdExpiresAt: null,
+          cienciaDireitoArrependimento: Boolean(body.cienciaDireitoArrependimento),
+        },
+      }),
+    ]);
+
+    return NextResponse.json({ pagamento, reserva: reservaAtualizada }, { status: 200 });
+  } catch (erro) {
+    if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") {
+      return NextResponse.json(
+        {
+          erro:
+            "essa data acabou de ser reservada por outro cliente enquanto o pagamento era processado, não foi possível concluir; comece a reserva novamente",
+        },
+        { status: 409 }
+      );
+    }
+    throw erro;
+  }
 }

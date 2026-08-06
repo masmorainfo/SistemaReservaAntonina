@@ -62,7 +62,7 @@ describe("PUT /api/eventos/reservas/[id]/pratos", () => {
       }),
     });
 
-    const response = await PUT(request, { params: { id: reservaConfirmadaId } });
+    const response = await PUT(request, { params: Promise.resolve({ id: reservaConfirmadaId }) });
     expect(response.status).toBe(200);
   });
 
@@ -72,7 +72,7 @@ describe("PUT /api/eventos/reservas/[id]/pratos", () => {
       body: JSON.stringify({ entradas: ["Arancini"], principais: [], sobremesa: "Tiramisu" }),
     });
 
-    const response = await PUT(request, { params: { id: reservaConfirmadaId } });
+    const response = await PUT(request, { params: Promise.resolve({ id: reservaConfirmadaId }) });
     expect(response.status).toBe(400);
   });
 
@@ -86,7 +86,7 @@ describe("PUT /api/eventos/reservas/[id]/pratos", () => {
       }),
     });
 
-    const response = await PUT(request, { params: { id: reservaPendenteId } });
+    const response = await PUT(request, { params: Promise.resolve({ id: reservaPendenteId }) });
     expect(response.status).toBe(409);
   });
 
@@ -96,7 +96,7 @@ describe("PUT /api/eventos/reservas/[id]/pratos", () => {
       body: "{ json inválido",
     });
 
-    const response = await PUT(request, { params: { id: reservaConfirmadaId } });
+    const response = await PUT(request, { params: Promise.resolve({ id: reservaConfirmadaId }) });
     expect(response.status).toBe(400);
   });
 
@@ -111,7 +111,7 @@ describe("PUT /api/eventos/reservas/[id]/pratos", () => {
       }),
     });
 
-    const response = await PUT(request, { params: { id: nonExistentId } });
+    const response = await PUT(request, { params: Promise.resolve({ id: nonExistentId }) });
     expect(response.status).toBe(404);
   });
 });

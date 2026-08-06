@@ -71,4 +71,29 @@ describe("POST /api/eventos/reservas", () => {
     const response = await POST(request);
     expect(response.status).toBe(400);
   });
+
+  it("retorna 400 ao tentar reservar uma data no passado", async () => {
+    const ontem = new Date();
+    ontem.setDate(ontem.getDate() - 1);
+    const ano = ontem.getFullYear();
+    const mes = (ontem.getMonth() + 1).toString().padStart(2, "0");
+    const dia = ontem.getDate().toString().padStart(2, "0");
+
+    const request = new NextRequest("http://localhost/api/eventos/reservas", {
+      method: "POST",
+      body: JSON.stringify({
+        clienteNome: "Cliente Data Passada",
+        clienteTelefone: "+5541977777777",
+        clienteEmail: "passado@exemplo.com",
+        tipoEvento: "CORPORATIVO",
+        data: `${ano}-${mes}-${dia}`,
+        numConvidados: 5,
+        pacoteId,
+        equipamentoTelao: false,
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(400);
+  });
 });

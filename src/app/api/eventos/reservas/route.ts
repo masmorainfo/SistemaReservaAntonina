@@ -57,6 +57,12 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ erro: "parâmetro 'data' inválido" }, { status: 400 });
   }
 
+  const hoje = new Date();
+  hoje.setHours(0, 0, 0, 0);
+  if (data < hoje) {
+    return NextResponse.json({ erro: "não é possível reservar uma data no passado" }, { status: 400 });
+  }
+
   const pacote = await prisma.pacote.findUnique({ where: { id: body.pacoteId } });
   if (!pacote || pacote.precoPessoa === null) {
     return NextResponse.json(

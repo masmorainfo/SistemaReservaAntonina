@@ -22,7 +22,9 @@ function validarInput(body: unknown): body is PratosInput {
   );
 }
 
-export async function PUT(request: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
+  const { id } = await params;
+
   let body: unknown;
   try {
     body = await request.json();
@@ -37,7 +39,7 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
     );
   }
 
-  const reserva = await prisma.reservaEvento.findUnique({ where: { id: params.id } });
+  const reserva = await prisma.reservaEvento.findUnique({ where: { id } });
 
   if (!reserva) {
     return NextResponse.json({ erro: "reserva não encontrada" }, { status: 404 });
@@ -51,8 +53,10 @@ export async function PUT(request: NextRequest, { params }: { params: { id: stri
   }
 
   const atualizada = await prisma.reservaEvento.update({
-    where: { id: params.id },
-    data: { pratosEscolhidos: body },
+    where: { id },
+    data: {
+      pratosEscolhidos: { entradas: body.entradas, principais: body.principais, sobremesa: body.sobremesa },
+    },
   });
 
   return NextResponse.json({ reserva: atualizada });

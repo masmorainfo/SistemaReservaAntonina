@@ -38,7 +38,7 @@ describe("POST /api/eventos/reservas/[id]/cancelar", () => {
       method: "POST",
     });
 
-    const response = await POST(request, { params: { id: reserva.id } });
+    const response = await POST(request, { params: Promise.resolve({ id: reserva.id }) });
     const body = await response.json();
 
     expect(response.status).toBe(200);
@@ -67,7 +67,7 @@ describe("POST /api/eventos/reservas/[id]/cancelar", () => {
       method: "POST",
     });
 
-    const response = await POST(request, { params: { id: reserva.id } });
+    const response = await POST(request, { params: Promise.resolve({ id: reserva.id }) });
     expect(response.status).toBe(409);
   });
 });
