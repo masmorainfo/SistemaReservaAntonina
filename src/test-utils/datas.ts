@@ -13,3 +13,10 @@ export function proximaTercaFeiraDistante(): string {
   const dia = dataFutura.getDate().toString().padStart(2, "0");
   return `${ano}-${mes}-${dia}`;
 }
+
+export function daquiADias(dias: number): Date {
+  const data = new Date();
+  data.setHours(0, 0, 0, 0);
+  data.setDate(data.getDate() + dias);
+  return data;
+}
