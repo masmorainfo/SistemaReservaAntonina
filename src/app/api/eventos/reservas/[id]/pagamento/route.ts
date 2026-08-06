@@ -136,10 +136,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     return NextResponse.json({ pagamento, reserva: reservaAtualizada }, { status: 200 });
   } catch (erro) {
     if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") {
+      // Pagamento.reservaEventoId é @unique: este P2002 significa que já existe
+      // um registro de pagamento para esta reserva (ex.: envio duplicado da
+      // mesma tentativa), não que a data foi perdida para outro cliente — essa
+      // colisão é impossível aqui, pois a reserva já ocupa o slot da data como
+      // AGUARDANDO_PAGAMENTO antes desta rota rodar.
       return NextResponse.json(
         {
-          erro:
-            "essa data acabou de ser reservada por outro cliente enquanto o pagamento era processado, não foi possível concluir; comece a reserva novamente",
+          erro: "já existe um pagamento registrado para esta reserva; atualize a página antes de tentar novamente",
         },
         { status: 409 }
       );
