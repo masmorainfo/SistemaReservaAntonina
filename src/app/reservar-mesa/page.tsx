@@ -4,8 +4,24 @@ import { carregarZonasDoAmbiente } from "@/lib/tableMap/loadZonesFromDb";
 import { ReservaMesaWizard } from "./ReservaMesaWizard";
 import type { ZonaClicavel } from "@/providers/tableMap/TableMapProvider";
 
+// Esta página lê dados ao vivo via Prisma (lista de ambientes, coordenadas do
+// mapa) a cada requisição. Prisma não é uma "dynamic API" do Next.js, então
+// sem essa diretiva o `next build` renderizaria a página estaticamente uma
+// única vez — congelando a lista de ambientes/mesas no build e exigindo banco
+// acessível em build time.
+export const dynamic = "force-dynamic";
+
+// Mezanino é reservável apenas via o fluxo de Evento (plano futuro): o espaço
+// é reconfigurável e não tem mesas fixas individualmente reserváveis no dia a
+// dia. Ver docs/superpowers/plans/2026-08-04-reserva-mesa-diaria.md, seção
+// "Suposições que este plano assume", item 1.
+const AMBIENTE_EXCLUIDO_DA_RESERVA_DIARIA = "Mezanino";
+
 export default async function ReservarMesaPage() {
-  const ambientes = await prisma.ambiente.findMany({ orderBy: { nome: "asc" } });
+  const ambientes = await prisma.ambiente.findMany({
+    where: { nome: { not: AMBIENTE_EXCLUIDO_DA_RESERVA_DIARIA } },
+    orderBy: { nome: "asc" },
+  });
 
   const zonasCarregadas: Record<string, ZonaClicavel[]> = {};
   for (const ambiente of ambientes) {

@@ -1,3 +1,12 @@
+// O restaurante opera em horário de Brasília (America/Sao_Paulo, UTC-3). A
+// lógica de "mesmo dia" / corte de horários já passados neste módulo (ver
+// `gerarHorariosDisponiveis` abaixo) assume que o processo Node roda no fuso
+// horário local do restaurante — o container da aplicação fixa isso via
+// `TZ: America/Sao_Paulo` em docker-compose.yml. Quem rodar os testes deste
+// módulo ou o servidor de dev fora desse container, num fuso horário local
+// diferente, pode ver testes sensíveis a horário de parede (wall-clock)
+// se comportarem de forma diferente — não é um bug deste módulo, é uma
+// consequência de depender de `new Date()`/hora local do processo.
 export type DiaSemana = 0 | 1 | 2 | 3 | 4 | 5 | 6;
 
 export interface JanelaServico {

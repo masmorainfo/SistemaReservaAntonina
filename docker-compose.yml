@@ -27,6 +27,7 @@ services:
       DATABASE_URL: postgresql://antonina:antonina_dev_password@db:5432/antonina_dev
       NEXTAUTH_SECRET: dev_secret_change_in_production
       NEXTAUTH_URL: http://localhost:3000
+      TZ: America/Sao_Paulo
     depends_on:
       db:
         condition: service_healthy
