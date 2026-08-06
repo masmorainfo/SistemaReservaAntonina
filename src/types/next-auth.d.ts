@@ -8,6 +8,7 @@ declare module "next-auth" {
 
   interface Session {
     user: {
+      id: string;
       role: AdminRole;
     } & DefaultSession["user"];
   }
@@ -17,6 +18,7 @@ declare module "next-auth" {
 // apontar para o módulo onde a interface JWT é realmente declarada.
 declare module "@auth/core/jwt" {
   interface JWT {
+    id: string;
     role: AdminRole;
   }
 }
