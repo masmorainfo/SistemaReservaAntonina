@@ -78,6 +78,30 @@ describe("POST /api/eventos/reservas/[id]/pagamento", () => {
     expect(response.status).toBe(400);
   });
 
+  it("não exige ciência quando o evento está a exatos 7 dias de distância", async () => {
+    const reserva = await criarHold(daquiADias(7), new Date(Date.now() + 10 * 60 * 1000));
+
+    const request = new NextRequest(`http://localhost/api/eventos/reservas/${reserva.id}/pagamento`, {
+      method: "POST",
+      body: JSON.stringify({ metodo: "pix" }),
+    });
+
+    const response = await POST(request, { params: { id: reserva.id } });
+    expect(response.status).toBe(200);
+  });
+
+  it("exige ciência quando o evento está a exatos 6 dias de distância", async () => {
+    const reserva = await criarHold(daquiADias(6), new Date(Date.now() + 10 * 60 * 1000));
+
+    const request = new NextRequest(`http://localhost/api/eventos/reservas/${reserva.id}/pagamento`, {
+      method: "POST",
+      body: JSON.stringify({ metodo: "pix" }),
+    });
+
+    const response = await POST(request, { params: { id: reserva.id } });
+    expect(response.status).toBe(400);
+  });
+
   it("aceita o pagamento com menos de 7 dias quando a ciência é confirmada", async () => {
     const reserva = await criarHold(daquiADias(4), new Date(Date.now() + 10 * 60 * 1000));
 

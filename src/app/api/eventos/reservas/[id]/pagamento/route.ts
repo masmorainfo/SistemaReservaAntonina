@@ -17,7 +17,15 @@ function validarInput(body: unknown): body is PagamentoInput {
 }
 
 function diasAteEvento(dataEvento: Date, agora: Date): number {
-  const diffMs = dataEvento.getTime() - agora.getTime();
+  // dataEvento vem de uma coluna @db.Date: o Prisma sempre a devolve como
+  // meia-noite UTC, independentemente do fuso em que o valor foi criado.
+  // agora é um instante real no fuso local do servidor. Para comparar
+  // "dias de calendário" sem viés de fuso ou hora do dia, extraímos os
+  // componentes de data de cada um do jeito certo (UTC para a coluna já
+  // normalizada, local para "hoje") e diferenciamos duas meias-noites UTC.
+  const dataEventoUTC = Date.UTC(dataEvento.getUTCFullYear(), dataEvento.getUTCMonth(), dataEvento.getUTCDate());
+  const agoraUTC = Date.UTC(agora.getFullYear(), agora.getMonth(), agora.getDate());
+  const diffMs = dataEventoUTC - agoraUTC;
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
 
