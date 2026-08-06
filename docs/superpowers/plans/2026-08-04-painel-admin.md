@@ -12,6 +12,10 @@
 
 Este plano assume que os três planos anteriores (`fundacao-tecnica`, `reserva-mesa-diaria`, `reserva-evento-mezanino`) já foram executados e verificados.
 
+## Débito técnico registrado (fora do escopo deste plano, mas rastreado)
+
+**Autorização nas rotas públicas de reserva de evento** (`POST /api/eventos/reservas/[id]/cancelar`, `PUT /api/eventos/reservas/[id]/pratos`, `POST /api/eventos/reservas/[id]/pagamento`, do plano `reserva-evento-mezanino`): nenhuma dessas rotas verifica se quem chama é de fato o cliente dono da reserva — o id (cuid) da reserva é a única "chave", o que é obscuridade, não autorização real. Decisão registrada na revisão final daquele plano: aceitar o risco por ora (rotas voltadas ao cliente final, não ao admin — fora do escopo de `exigirSessaoAdmin` deste plano) e desenhar a solução (token por e-mail/SMS enviado ao cliente, ou outro mecanismo de posse) como parte de um trabalho futuro dedicado, não como extensão ad-hoc da autenticação de admin construída aqui.
+
 ## Escopo desta fase (o que fica de fora, e por quê)
 
 Cadastro de mesas/ambientes/pacotes e gestão de usuários da equipe **não** ganham telas dedicadas neste plano — são operações raras (configuração inicial do restaurante, não uso diário), e o **Prisma Studio** (`npm run db:studio`, já disponível desde a Fundação) já entrega CRUD completo nessas tabelas sem esforço adicional de implementação. Se o volume de uso um dia justificar telas próprias, isso vira uma tarefa de Fase 2. Da mesma forma, a troca do provedor de pagamento ativo não ganha UI aqui — não faz sentido construir um seletor quando `MockProvider` é o único provedor que existe na Fase 1 (ver plano de Fundação); isso é trabalho de Fase 2, quando um provedor real for conectado.

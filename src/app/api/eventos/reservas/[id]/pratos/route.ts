@@ -22,6 +22,12 @@ function validarInput(body: unknown): body is PratosInput {
   );
 }
 
+// LIMITAÇÃO CONHECIDA: esta rota não verifica se quem chama é o dono da
+// reserva — qualquer pessoa que descubra o id (cuid) pode sobrescrever o
+// cardápio escolhido. cuids são difíceis de adivinhar, mas isso é
+// obscuridade, não autorização. Decisão registrada: aceitar o risco por ora
+// e tratar no desenho de autenticação de cliente do Painel Admin
+// (ver docs/superpowers/plans/2026-08-04-painel-admin.md).
 export async function PUT(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 

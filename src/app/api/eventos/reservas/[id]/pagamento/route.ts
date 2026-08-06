@@ -31,6 +31,12 @@ function diasAteEvento(dataEvento: Date, agora: Date): number {
   return Math.floor(diffMs / (1000 * 60 * 60 * 24));
 }
 
+// LIMITAÇÃO CONHECIDA: esta rota não verifica se quem chama é o dono da
+// reserva — qualquer pessoa que descubra o id (cuid) pode pagar por ela.
+// cuids são difíceis de adivinhar, mas isso é obscuridade, não autorização.
+// Decisão registrada: aceitar o risco por ora e tratar no desenho de
+// autenticação de cliente do Painel Admin
+// (ver docs/superpowers/plans/2026-08-04-painel-admin.md).
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
