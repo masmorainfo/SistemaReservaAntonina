@@ -27,12 +27,18 @@ function validarInput(body: unknown): body is PedidoOrcamentoInput {
     TIPOS_EVENTO_VALIDOS.includes(b.tipoEvento) &&
     typeof b.dataDesejada === "string" &&
     typeof b.numConvidados === "number" &&
-    b.numConvidados > 0
+    b.numConvidados > 0 &&
+    (b.observacoes === undefined || typeof b.observacoes === "string")
   );
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch (error: unknown) {
+    return NextResponse.json({ erro: "corpo da requisição inválido" }, { status: 400 });
+  }
 
   if (!validarInput(body)) {
     return NextResponse.json({ erro: "dados do pedido de orçamento inválidos ou incompletos" }, { status: 400 });

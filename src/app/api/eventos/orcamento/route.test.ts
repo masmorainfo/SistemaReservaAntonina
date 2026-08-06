@@ -35,4 +35,32 @@ describe("POST /api/eventos/orcamento", () => {
     const response = await POST(request);
     expect(response.status).toBe(400);
   });
+
+  it("retorna 400 quando observacoes não é string", async () => {
+    const request = new NextRequest("http://localhost/api/eventos/orcamento", {
+      method: "POST",
+      body: JSON.stringify({
+        clienteNome: "Cliente Teste",
+        clienteTelefone: "+5541999999999",
+        clienteEmail: "cliente@exemplo.com",
+        tipoEvento: "CORPORATIVO",
+        dataDesejada: "2027-10-20",
+        numConvidados: 25,
+        observacoes: 123,
+      }),
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(400);
+  });
+
+  it("retorna 400 com JSON malformado no corpo da requisição", async () => {
+    const request = new NextRequest("http://localhost/api/eventos/orcamento", {
+      method: "POST",
+      body: "isso não é JSON válido {",
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(400);
+  });
 });
