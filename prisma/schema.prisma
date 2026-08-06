@@ -116,6 +116,10 @@ model ReservaEvento {
   pratosEscolhidos Json?
   pagamento        Pagamento?
   createdAt        DateTime            @default(now())
+
+  percentualReembolsoAplicado Decimal? @db.Decimal(5, 2)
+  valorReembolso               Decimal? @db.Decimal(10, 2)
+  cienciaDireitoArrependimento Boolean  @default(false)
 }
 
 model Pagamento {
@@ -149,4 +153,16 @@ model Feriado {
   id   String   @id @default(cuid())
   data DateTime @unique @db.Date
   nome String
+}
+
+model PedidoOrcamento {
+  id              String     @id @default(cuid())
+  clienteNome     String
+  clienteTelefone String
+  clienteEmail    String
+  tipoEvento      TipoEvento
+  dataDesejada    DateTime   @db.Date
+  numConvidados   Int
+  observacoes     String?
+  createdAt       DateTime   @default(now())
 }
