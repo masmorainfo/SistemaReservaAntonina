@@ -61,4 +61,14 @@ describe("POST /api/eventos/reservas", () => {
     const response = await POST(request);
     expect(response.status).toBe(409);
   });
+
+  it("retorna 400 com JSON malformado no corpo da requisição", async () => {
+    const request = new NextRequest("http://localhost/api/eventos/reservas", {
+      method: "POST",
+      body: "isso não é JSON válido {",
+    });
+
+    const response = await POST(request);
+    expect(response.status).toBe(400);
+  });
 });

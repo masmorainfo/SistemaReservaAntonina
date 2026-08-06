@@ -41,7 +41,12 @@ function validarInput(body: unknown): body is CriarReservaEventoInput {
 }
 
 export async function POST(request: NextRequest) {
-  const body = await request.json();
+  let body: unknown;
+  try {
+    body = await request.json();
+  } catch (error: unknown) {
+    return NextResponse.json({ erro: "corpo da requisição inválido" }, { status: 400 });
+  }
 
   if (!validarInput(body)) {
     return NextResponse.json({ erro: "dados da reserva de evento inválidos ou incompletos" }, { status: 400 });
