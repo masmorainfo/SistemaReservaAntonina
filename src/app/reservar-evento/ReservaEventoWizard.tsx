@@ -247,7 +247,7 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
               <input
                 type="radio"
                 name="pacote"
-                checked={!cardapioAberto && pacoteId === pacote.id}
+                checked={pacoteId === pacote.id}
                 onChange={() => {
                   setCardapioAberto(pacote.precoPessoa === null);
                   setPacoteId(pacote.id);
