@@ -99,4 +99,19 @@ describe("PUT /api/eventos/reservas/[id]/pratos", () => {
     const response = await PUT(request, { params: { id: reservaConfirmadaId } });
     expect(response.status).toBe(400);
   });
+
+  it("retorna 404 quando a reserva não existe", async () => {
+    const nonExistentId = "00000000-0000-0000-0000-000000000000";
+    const request = new NextRequest(`http://localhost/api/eventos/reservas/${nonExistentId}/pratos`, {
+      method: "PUT",
+      body: JSON.stringify({
+        entradas: ["Arancini", "Fritte Al Tartufo", "Caesar"],
+        principais: ["Gnocchi Al Ragu", "Funghi e Filetto", "Cappelletti", "Gnocchi Grelhado"],
+        sobremesa: "Tiramisu",
+      }),
+    });
+
+    const response = await PUT(request, { params: { id: nonExistentId } });
+    expect(response.status).toBe(404);
+  });
 });
