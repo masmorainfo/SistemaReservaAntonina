@@ -11,14 +11,18 @@ export default function MapaDoDiaPage() {
 
   const carregar = useCallback(async () => {
     setErro("");
-    const resposta = await fetch(`/api/admin/mapa-do-dia?data=${data}`);
-    const corpo = await resposta.json();
-    if (!resposta.ok) {
-      setErro(corpo.erro ?? "não foi possível carregar o mapa do dia");
-      return;
+    try {
+      const resposta = await fetch(`/api/admin/mapa-do-dia?data=${data}`);
+      const corpo = await resposta.json();
+      if (!resposta.ok) {
+        setErro(corpo.erro ?? "não foi possível carregar o mapa do dia");
+        return;
+      }
+      setMesas(corpo.mesas);
+      setEventos(corpo.eventos);
+    } catch {
+      setErro("não foi possível carregar o mapa do dia");
     }
-    setMesas(corpo.mesas);
-    setEventos(corpo.eventos);
   }, [data]);
 
   useEffect(() => {
@@ -26,9 +30,13 @@ export default function MapaDoDiaPage() {
   }, [carregar]);
 
   async function cancelarReservaMesa(id: string) {
-    const resposta = await fetch(`/api/admin/reservas-mesa/${id}/cancelar`, { method: "POST" });
-    if (resposta.ok) {
-      await carregar();
+    try {
+      const resposta = await fetch(`/api/admin/reservas-mesa/${id}/cancelar`, { method: "POST" });
+      if (resposta.ok) {
+        await carregar();
+      }
+    } catch {
+      setErro("não foi possível cancelar a reserva");
     }
   }
 
