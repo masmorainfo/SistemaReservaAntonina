@@ -102,6 +102,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           metodo: paraMetodoPagamentoEnum(body.metodo),
           valor: valorSinal,
           status: paraStatusPagamentoEnum(resultadoPagamento.status),
+          referenciaExterna: resultadoPagamento.referenciaExterna,
         },
       });
 
@@ -121,6 +122,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
           metodo: paraMetodoPagamentoEnum(body.metodo),
           valor: valorSinal,
           status: paraStatusPagamentoEnum(resultadoPagamento.status),
+          referenciaExterna: resultadoPagamento.referenciaExterna,
         },
       }),
       prisma.reservaEvento.update({
