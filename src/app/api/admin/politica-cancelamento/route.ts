@@ -44,7 +44,13 @@ export const PUT = comAuthAdmin(["DONO"], async (request) => {
 
   const resultado = await prisma.$transaction([
     prisma.politicaCancelamento.deleteMany(),
-    prisma.politicaCancelamento.createMany({ data: body }),
+    prisma.politicaCancelamento.createMany({
+      data: body.map((tier) => ({
+        diasMinimos: tier.diasMinimos,
+        diasMaximos: tier.diasMaximos,
+        percentualReembolso: tier.percentualReembolso,
+      })),
+    }),
   ]);
 
   return NextResponse.json({ tiersCriados: resultado[1].count });

@@ -86,4 +86,26 @@ describe("PUT /api/admin/politica-cancelamento", () => {
     const tiers = await prisma.politicaCancelamento.findMany({ where: { diasMinimos: 9999 } });
     expect(tiers).toHaveLength(0);
   });
+
+  it("ignora campos extras (over-posting) e não deixa o chamador definir a chave primária", async () => {
+    vi.mocked(auth).mockResolvedValueOnce({ user: { id: "u1", role: "DONO" } } as never);
+    const request = new NextRequest("http://localhost/api/admin/politica-cancelamento", {
+      method: "PUT",
+      body: JSON.stringify([
+        {
+          id: "id-forjado-pelo-cliente",
+          diasMinimos: 9999,
+          diasMaximos: null,
+          percentualReembolso: 10,
+          campoInexistente: "não deveria ir pro banco",
+        },
+      ]),
+    });
+    const response = await PUT(request);
+    expect(response.status).toBe(200);
+
+    const tiers = await prisma.politicaCancelamento.findMany({ where: { diasMinimos: 9999 } });
+    expect(tiers).toHaveLength(1);
+    expect(tiers[0].id).not.toBe("id-forjado-pelo-cliente");
+  });
 });
