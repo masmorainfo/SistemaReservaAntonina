@@ -1,12 +1,17 @@
 import type { PaymentProvider } from "./PaymentProvider";
 import { MockPaymentProvider } from "./MockPaymentProvider";
+import { MercadoPagoProvider } from "./MercadoPagoProvider";
 
 /**
- * Fábrica do provedor de pagamento ativo. Hoje sempre retorna o
- * MockPaymentProvider — este é o ponto de extensão onde um gateway real
- * (Fase 2) será plugado, e o que torna a escolha de provedor testável/mockável
- * a partir das rotas que o consomem.
+ * Fábrica do provedor de pagamento ativo. Sem PAYMENT_PROVIDER=mercadopago
+ * definido, sempre retorna o MockPaymentProvider — inclusive no ambiente de
+ * teste, que nunca define essa variável. Isso é intencional: o lado seguro
+ * por padrão é nunca acidentalmente tentar falar com o Mercado Pago de
+ * verdade sem configuração explícita.
  */
 export function getPaymentProvider(): PaymentProvider {
+  if (process.env.PAYMENT_PROVIDER === "mercadopago") {
+    return new MercadoPagoProvider();
+  }
   return new MockPaymentProvider();
 }
