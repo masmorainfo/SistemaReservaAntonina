@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { exigirSessaoAdmin, NaoAutenticadoError } from "@/lib/auth/requireSession";
-import { AcessoNegadoError } from "@/lib/auth/roles";
+import { comAuthAdmin } from "@/lib/auth/requireSession";
 
 interface TierInput {
   diasMinimos: number;
@@ -14,44 +13,30 @@ function validarTiers(body: unknown): body is TierInput[] {
   return body.every((item) => {
     if (typeof item !== "object" || item === null) return false;
     const t = item as Record<string, unknown>;
-    return (
+    const tiposValidos =
       typeof t.diasMinimos === "number" &&
       (t.diasMaximos === null || typeof t.diasMaximos === "number") &&
-      typeof t.percentualReembolso === "number"
+      typeof t.percentualReembolso === "number";
+    if (!tiposValidos) return false;
+
+    const diasMinimos = t.diasMinimos as number;
+    const diasMaximos = t.diasMaximos as number | null;
+    const percentualReembolso = t.percentualReembolso as number;
+    return (
+      diasMinimos >= 0 &&
+      (diasMaximos === null || diasMaximos >= diasMinimos) &&
+      percentualReembolso >= 0 &&
+      percentualReembolso <= 100
     );
   });
 }
 
-export async function GET(request: NextRequest) {
-  try {
-    await exigirSessaoAdmin(["DONO", "RECEPCAO"]);
-  } catch (erro) {
-    if (erro instanceof NaoAutenticadoError) {
-      return NextResponse.json({ erro: "não autenticado" }, { status: 401 });
-    }
-    if (erro instanceof AcessoNegadoError) {
-      return NextResponse.json({ erro: erro.message }, { status: 403 });
-    }
-    throw erro;
-  }
-
+export const GET = comAuthAdmin(["DONO", "RECEPCAO"], async () => {
   const tiers = await prisma.politicaCancelamento.findMany({ orderBy: { diasMinimos: "desc" } });
   return NextResponse.json({ tiers });
-}
+});
 
-export async function PUT(request: NextRequest) {
-  try {
-    await exigirSessaoAdmin(["DONO"]);
-  } catch (erro) {
-    if (erro instanceof NaoAutenticadoError) {
-      return NextResponse.json({ erro: "não autenticado" }, { status: 401 });
-    }
-    if (erro instanceof AcessoNegadoError) {
-      return NextResponse.json({ erro: erro.message }, { status: 403 });
-    }
-    throw erro;
-  }
-
+export const PUT = comAuthAdmin(["DONO"], async (request) => {
   const body = await request.json();
   if (!validarTiers(body)) {
     return NextResponse.json({ erro: "lista de faixas de cancelamento inválida" }, { status: 400 });
@@ -63,4 +48,4 @@ export async function PUT(request: NextRequest) {
   ]);
 
   return NextResponse.json({ tiersCriados: resultado[1].count });
-}
+});

@@ -23,6 +23,8 @@ export default function LoginPage() {
       }
       router.push("/admin/mapa-do-dia");
       router.refresh();
+    } catch {
+      setErro("não foi possível entrar — tente novamente");
     } finally {
       setCarregando(false);
     }

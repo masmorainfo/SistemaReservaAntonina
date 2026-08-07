@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from "react";
 import type { ReservaMesaResumo, ReservaEventoResumo } from "@/lib/domain/dailyOverview";
 
 export default function MapaDoDiaPage() {
-  const [data, setData] = useState(() => new Date().toISOString().slice(0, 10));
+  const [data, setData] = useState(() => new Date().toLocaleDateString("en-CA"));
   const [mesas, setMesas] = useState<ReservaMesaResumo[]>([]);
   const [eventos, setEventos] = useState<ReservaEventoResumo[]>([]);
   const [erro, setErro] = useState("");

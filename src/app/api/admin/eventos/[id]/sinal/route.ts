@@ -1,7 +1,6 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { exigirSessaoAdmin, NaoAutenticadoError } from "@/lib/auth/requireSession";
-import { AcessoNegadoError } from "@/lib/auth/roles";
+import { comAuthAdminComParams } from "@/lib/auth/requireSession";
 
 interface SinalInput {
   percentualSinal: number;
@@ -13,19 +12,7 @@ function validarInput(body: unknown): body is SinalInput {
   return typeof b.percentualSinal === "number" && b.percentualSinal > 0 && b.percentualSinal <= 100;
 }
 
-export async function PATCH(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    await exigirSessaoAdmin(["DONO", "RECEPCAO"]);
-  } catch (erro) {
-    if (erro instanceof NaoAutenticadoError) {
-      return NextResponse.json({ erro: "não autenticado" }, { status: 401 });
-    }
-    if (erro instanceof AcessoNegadoError) {
-      return NextResponse.json({ erro: erro.message }, { status: 403 });
-    }
-    throw erro;
-  }
-
+export const PATCH = comAuthAdminComParams(["DONO", "RECEPCAO"], async (request, { params }) => {
   const { id } = await params;
 
   const body = await request.json();
@@ -51,4 +38,4 @@ export async function PATCH(request: NextRequest, { params }: { params: Promise<
   });
 
   return NextResponse.json({ reserva: atualizada });
-}
+});

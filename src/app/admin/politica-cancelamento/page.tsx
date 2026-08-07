@@ -48,7 +48,8 @@ export default function PoliticaCancelamentoPage() {
     setSucesso("");
     const payload = tiers.map((t) => ({
       diasMinimos: Number(t.diasMinimos),
-      diasMaximos: t.diasMaximos === null ? null : Number(t.diasMaximos),
+      diasMaximos:
+        t.diasMaximos === null || (t.diasMaximos as unknown) === "" ? null : Number(t.diasMaximos),
       percentualReembolso: Number(t.percentualReembolso),
     }));
 

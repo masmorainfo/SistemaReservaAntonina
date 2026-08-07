@@ -1,21 +1,8 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
-import { exigirSessaoAdmin, NaoAutenticadoError } from "@/lib/auth/requireSession";
-import { AcessoNegadoError } from "@/lib/auth/roles";
+import { comAuthAdminComParams } from "@/lib/auth/requireSession";
 
-export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  try {
-    await exigirSessaoAdmin(["DONO", "RECEPCAO"]);
-  } catch (erro) {
-    if (erro instanceof NaoAutenticadoError) {
-      return NextResponse.json({ erro: "não autenticado" }, { status: 401 });
-    }
-    if (erro instanceof AcessoNegadoError) {
-      return NextResponse.json({ erro: erro.message }, { status: 403 });
-    }
-    throw erro;
-  }
-
+export const POST = comAuthAdminComParams(["DONO", "RECEPCAO"], async (_request, { params }) => {
   const { id } = await params;
 
   const reserva = await prisma.reservaMesa.findUnique({ where: { id } });
@@ -29,4 +16,4 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   });
 
   return NextResponse.json({ reserva: atualizada });
-}
+});
