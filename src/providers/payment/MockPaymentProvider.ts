@@ -4,18 +4,19 @@ import {
   ResultadoPagamento,
   ResultadoWebhook,
   ResultadoEstorno,
+  PayloadWebhook,
 } from "./PaymentProvider";
 
 type ResultadoForcado = "aprovado" | "recusado";
 
-function extrairReferencia(payload: unknown): string {
+function extrairReferencia(payload: PayloadWebhook): string {
   if (
-    typeof payload === "object" &&
-    payload !== null &&
-    "referenciaExterna" in payload &&
-    typeof (payload as { referenciaExterna: unknown }).referenciaExterna === "string"
+    typeof payload.corpo === "object" &&
+    payload.corpo !== null &&
+    "referenciaExterna" in payload.corpo &&
+    typeof (payload.corpo as { referenciaExterna: unknown }).referenciaExterna === "string"
   ) {
-    return (payload as { referenciaExterna: string }).referenciaExterna;
+    return (payload.corpo as { referenciaExterna: string }).referenciaExterna;
   }
 
   return "mock_referencia_desconhecida";
@@ -46,7 +47,7 @@ export class MockPaymentProvider implements PaymentProvider {
     };
   }
 
-  async validarWebhook(payload: unknown, _assinatura: string): Promise<ResultadoWebhook> {
+  async validarWebhook(payload: PayloadWebhook, _assinatura: string): Promise<ResultadoWebhook> {
     // A validação real de assinatura é responsabilidade do gateway real (Fase 2).
     return {
       referenciaExterna: extrairReferencia(payload),
