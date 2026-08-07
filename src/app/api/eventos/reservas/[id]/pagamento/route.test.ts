@@ -151,4 +151,50 @@ describe("POST /api/eventos/reservas/[id]/pagamento", () => {
     expect(body.pagamento.status).toBe("RECUSADO");
     expect(body.reserva.status).toBe("CANCELADA");
   });
+
+  it("persiste referenciaExterna e repassa dadosPix quando o provider os fornece", async () => {
+    const providerComPix = {
+      nome: "fake-pix",
+      async iniciarPagamento() {
+        return {
+          provedor: "fake-pix",
+          status: "pendente" as const,
+          referenciaExterna: "ref-fake-123",
+          dadosPix: {
+            qrCode: "codigo-copia-e-cola",
+            qrCodeBase64: "base64qualquer",
+            expiraEm: new Date(Date.now() + 10 * 60 * 1000).toISOString(),
+          },
+        };
+      },
+      async validarWebhook() {
+        throw new Error("não usado neste teste");
+      },
+      async consultarStatus() {
+        throw new Error("não usado neste teste");
+      },
+      async estornar() {
+        throw new Error("não usado neste teste");
+      },
+    };
+
+    vi.spyOn(getPaymentProviderModule, "getPaymentProvider").mockReturnValue(providerComPix);
+
+    const reserva = await criarHold(daquiADias(34), new Date(Date.now() + 10 * 60 * 1000));
+
+    const request = new NextRequest(`http://localhost/api/eventos/reservas/${reserva.id}/pagamento`, {
+      method: "POST",
+      body: JSON.stringify({ metodo: "pix" }),
+    });
+
+    const response = await POST(request, { params: Promise.resolve({ id: reserva.id }) });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.dadosPix.qrCode).toBe("codigo-copia-e-cola");
+    expect(body.pagamento.status).toBe("PENDENTE");
+
+    const pagamentoNoBanco = await prisma.pagamento.findUnique({ where: { reservaEventoId: reserva.id } });
+    expect(pagamentoNoBanco?.referenciaExterna).toBe("ref-fake-123");
+  });
 });

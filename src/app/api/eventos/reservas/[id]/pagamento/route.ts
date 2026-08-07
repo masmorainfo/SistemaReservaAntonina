@@ -106,14 +106,14 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
         },
       });
 
-      return NextResponse.json({ pagamento, reserva }, { status: 200 });
+      return NextResponse.json({ pagamento, reserva, dadosPix: resultadoPagamento.dadosPix }, { status: 200 });
     }
 
-    // TODO(fase-2): mover confirmação para o webhook do gateway real — hoje
-    // confirmamos direto no retorno de iniciarPagamento porque
-    // MockPaymentProvider é síncrono. PaymentProvider.iniciarPagamento
-    // documenta que a confirmação real só deve ocorrer após a validação do
-    // webhook do gateway.
+    // Este branch só é alcançado por um provider que confirma de forma
+    // síncrona (hoje, só o MockPaymentProvider) — o MercadoPagoProvider real
+    // sempre retorna "pendente" para pix, então a confirmação de verdade
+    // acontece na rota de webhook (src/app/api/webhooks/mercadopago/route.ts),
+    // nunca aqui.
     const [pagamento, reservaAtualizada] = await prisma.$transaction([
       prisma.pagamento.create({
         data: {
