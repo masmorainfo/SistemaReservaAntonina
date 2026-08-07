@@ -1,5 +1,13 @@
-import { test, expect } from "@playwright/test";
+import { test, expect, type Page } from "@playwright/test";
 import { prisma } from "../src/lib/db";
+
+async function loginComoDono(page: Page) {
+  await page.goto("/admin/login");
+  await page.getByLabel("E-mail").fill("dono@antoninaosteria.com");
+  await page.getByLabel("Senha").fill("trocar-esta-senha");
+  await page.getByRole("button", { name: "Entrar" }).click();
+  await page.waitForURL("**/admin/mapa-do-dia");
+}
 
 test.describe("Painel administrativo", () => {
   let ambienteId: string;
@@ -31,11 +39,7 @@ test.describe("Painel administrativo", () => {
   });
 
   test("dono faz login e cancela uma reserva de mesa pelo mapa do dia", async ({ page }) => {
-    await page.goto("/admin/login");
-    await page.getByLabel("E-mail").fill("dono@antoninaosteria.com");
-    await page.getByLabel("Senha").fill("trocar-esta-senha");
-    await page.getByRole("button", { name: "Entrar" }).click();
-    await page.waitForURL("**/admin/mapa-do-dia");
+    await loginComoDono(page);
 
     await page.goto("/admin/mapa-do-dia");
     await page.getByLabel("Data").fill("2027-06-01");
@@ -44,5 +48,20 @@ test.describe("Painel administrativo", () => {
     await page.getByRole("button", { name: "Cancelar" }).click();
 
     await expect(page.getByText("Cliente Admin E2E")).not.toBeVisible();
+  });
+
+  test("dono navega pelo menu admin e faz logout", async ({ page }) => {
+    await loginComoDono(page);
+
+    await expect(page.getByRole("link", { name: "Eventos" })).toBeVisible();
+    await page.getByRole("link", { name: "Política de Cancelamento" }).click();
+    await page.waitForURL("**/admin/politica-cancelamento");
+    await expect(page.getByRole("heading", { name: "Política de Cancelamento" })).toBeVisible();
+
+    await page.getByRole("button", { name: "Sair" }).click();
+    await page.waitForURL("**/admin/login");
+
+    await page.goto("/admin/mapa-do-dia");
+    await page.waitForURL("**/admin/login");
   });
 });
