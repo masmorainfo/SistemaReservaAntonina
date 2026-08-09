@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { prisma } from "@/lib/db";
 import { calcularPercentualReembolso } from "@/lib/domain/refundPolicy";
 import { buscarTiersPoliticaCancelamento } from "@/lib/domain/cancellationPolicyRepository";
+import { getPaymentProvider } from "@/providers/payment/getPaymentProvider";
 
 function diasEntre(dataEvento: Date, agora: Date): number {
   // dataEvento vem de uma coluna @db.Date: o Prisma sempre a devolve como
@@ -24,7 +25,10 @@ function diasEntre(dataEvento: Date, agora: Date): number {
 export async function POST(request: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
 
-  const reserva = await prisma.reservaEvento.findUnique({ where: { id } });
+  const reserva = await prisma.reservaEvento.findUnique({
+    where: { id },
+    include: { pagamento: true },
+  });
 
   if (!reserva) {
     return NextResponse.json({ erro: "reserva não encontrada" }, { status: 404 });
@@ -38,6 +42,18 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const dias = diasEntre(reserva.data, new Date());
   const percentualReembolso = calcularPercentualReembolso(dias, tiers);
   const valorReembolso = Math.round(Number(reserva.valorTotal) * (percentualReembolso / 100) * 100) / 100;
+
+  if (reserva.pagamento && reserva.pagamento.status === "APROVADO" && valorReembolso > 0) {
+    const provider = getPaymentProvider();
+    try {
+      await provider.estornar(reserva.pagamento.referenciaExterna, valorReembolso);
+    } catch {
+      return NextResponse.json(
+        { erro: "não foi possível processar o estorno junto ao provedor de pagamento; tente novamente" },
+        { status: 502 }
+      );
+    }
+  }
 
   const atualizada = await prisma.reservaEvento.update({
     where: { id },
