@@ -1,6 +1,7 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
+import type { DadosPix } from "@/providers/payment/PaymentProvider";
 
 interface Pacote {
   id: string;
@@ -13,7 +14,15 @@ interface ReservaEventoWizardProps {
 }
 
 type TipoEvento = "CORPORATIVO" | "ANIVERSARIO" | "JANTAR_RESERVADO" | "OUTRO";
-type Etapa = "quando" | "pacote" | "orcamento" | "orcamentoEnviado" | "checkout" | "confirmado";
+type Etapa =
+  | "quando"
+  | "pacote"
+  | "orcamento"
+  | "orcamentoEnviado"
+  | "checkout"
+  | "aguardandoPix"
+  | "pagamentoExpirado"
+  | "confirmado";
 
 const VALOR_TELAO_PROJETOR = 500;
 
@@ -35,6 +44,7 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
   const [metodo, setMetodo] = useState<"pix" | "cartao">("pix");
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
+  const [dadosPix, setDadosPix] = useState<DadosPix | null>(null);
 
   function calcularValorEstimado(pacote: Pacote): number {
     if (pacote.precoPessoa === null) return 0;
@@ -169,6 +179,12 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
         return;
       }
 
+      if (corpo.dadosPix) {
+        setDadosPix(corpo.dadosPix);
+        setEtapa("aguardandoPix");
+        return;
+      }
+
       setEtapa("confirmado");
     } catch {
       setErro("não foi possível conectar ao servidor para confirmar o pagamento");
@@ -176,6 +192,43 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
       setCarregando(false);
     }
   }
+
+  useEffect(() => {
+    if (etapa !== "aguardandoPix" || !dadosPix) {
+      return;
+    }
+
+    const expiraEmMs = new Date(dadosPix.expiraEm).getTime();
+
+    const intervalo = setInterval(async () => {
+      if (Date.now() >= expiraEmMs) {
+        clearInterval(intervalo);
+        setEtapa("pagamentoExpirado");
+        return;
+      }
+
+      try {
+        const resposta = await fetch(`/api/eventos/reservas/${reservaId}`);
+        if (!resposta.ok) {
+          return;
+        }
+        const corpo = await resposta.json();
+
+        if (corpo.status === "CONFIRMADA") {
+          clearInterval(intervalo);
+          setEtapa("confirmado");
+        } else if (corpo.status === "CANCELADA") {
+          clearInterval(intervalo);
+          setEtapa("pagamentoExpirado");
+        }
+      } catch {
+        // Falha pontual de rede durante o polling — tenta de novo no
+        // próximo intervalo, sem interromper a espera.
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalo);
+  }, [etapa, dadosPix, reservaId]);
 
   if (etapa === "orcamentoEnviado") {
     return <p role="status">Pedido de orçamento enviado! Nossa equipe entrará em contato em breve.</p>;
@@ -186,6 +239,14 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
       <p role="status">
         Evento confirmado para {clienteNome} em {data}. Em breve você recebe o link para escolher os pratos do
         cardápio.
+      </p>
+    );
+  }
+
+  if (etapa === "pagamentoExpirado") {
+    return (
+      <p role="alert">
+        O tempo para concluir o pagamento esgotou. Volte e comece a reserva novamente.
       </p>
     );
   }
@@ -326,6 +387,19 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
           >
             Confirmar pagamento
           </button>
+        </fieldset>
+      )}
+
+      {etapa === "aguardandoPix" && dadosPix && (
+        <fieldset>
+          <legend>Pague com Pix</legend>
+          <p>Escaneie o QR code no app do seu banco ou copie o código abaixo.</p>
+          <img src={`data:image/png;base64,${dadosPix.qrCodeBase64}`} alt="QR code para pagamento Pix" />
+          <label>
+            Código copia-e-cola
+            <textarea readOnly value={dadosPix.qrCode} />
+          </label>
+          <p role="status">Aguardando confirmação do pagamento...</p>
         </fieldset>
       )}
     </div>
