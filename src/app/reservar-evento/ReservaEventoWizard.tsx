@@ -45,6 +45,20 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
   const [dadosPix, setDadosPix] = useState<DadosPix | null>(null);
+  const [codigoPixCopiado, setCodigoPixCopiado] = useState(false);
+
+  async function copiarCodigoPix() {
+    if (!dadosPix) return;
+    try {
+      await navigator.clipboard.writeText(dadosPix.qrCode);
+      setCodigoPixCopiado(true);
+      setTimeout(() => setCodigoPixCopiado(false), 3000);
+    } catch {
+      // Clipboard indisponível (ex.: navegador sem permissão) — o código
+      // continua selecionável manualmente na textarea, então não é um erro
+      // que impeça o pagamento.
+    }
+  }
 
   function calcularValorEstimado(pacote: Pacote): number {
     if (pacote.precoPessoa === null) return 0;
@@ -394,11 +408,19 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
         <fieldset>
           <legend>Pague com Pix</legend>
           <p>Escaneie o QR code no app do seu banco ou copie o código abaixo.</p>
-          <img src={`data:image/png;base64,${dadosPix.qrCodeBase64}`} alt="QR code para pagamento Pix" />
+          <img
+            src={`data:image/png;base64,${dadosPix.qrCodeBase64}`}
+            alt="QR code para pagamento Pix"
+            width={200}
+            height={200}
+          />
           <label>
             Código copia-e-cola
             <textarea readOnly value={dadosPix.qrCode} />
           </label>
+          <button type="button" onClick={copiarCodigoPix}>
+            {codigoPixCopiado ? "Copiado!" : "Copiar código"}
+          </button>
           <p role="status">Aguardando confirmação do pagamento...</p>
         </fieldset>
       )}

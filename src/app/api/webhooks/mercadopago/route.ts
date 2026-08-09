@@ -76,6 +76,17 @@ export async function POST(request: NextRequest) {
       // acompanhamento manual.
       try {
         await provider.estornar(resultado.referenciaExterna, Number(pagamento.valor));
+        // Registra o estorno na própria reserva — sem isso, um Pagamento
+        // APROVADO numa reserva CANCELADA fica indistinguível de um
+        // pagamento aprovado que nunca foi estornado, sem nenhuma query
+        // capaz de responder "quais estornos automáticos foram feitos?".
+        await prisma.reservaEvento.update({
+          where: { id: reserva.id },
+          data: {
+            valorReembolso: Number(pagamento.valor),
+            percentualReembolsoAplicado: 100,
+          },
+        });
       } catch (erroEstorno) {
         console.error("falha ao estornar pagamento tardio", pagamento.id, erroEstorno);
       }

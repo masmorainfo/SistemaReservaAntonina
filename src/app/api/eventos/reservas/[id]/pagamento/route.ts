@@ -88,6 +88,7 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
     reservaEventoId: reserva.id,
     valor: valorSinal,
     metodo: body.metodo,
+    clienteEmail: reserva.clienteEmail,
   });
 
   try {

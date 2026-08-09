@@ -8,6 +8,7 @@ describe("MockPaymentProvider", () => {
       reservaEventoId: "evt_1",
       valor: 100,
       metodo: "pix",
+      clienteEmail: "cliente@exemplo.com",
     });
 
     expect(resultado.status).toBe("aprovado");
@@ -18,7 +19,12 @@ describe("MockPaymentProvider", () => {
   it("lança erro para valor zero ou negativo", async () => {
     const provider = new MockPaymentProvider();
     await expect(
-      provider.iniciarPagamento({ reservaEventoId: "evt_1", valor: 0, metodo: "pix" })
+      provider.iniciarPagamento({
+        reservaEventoId: "evt_1",
+        valor: 0,
+        metodo: "pix",
+        clienteEmail: "cliente@exemplo.com",
+      })
     ).rejects.toThrow();
   });
 
@@ -80,6 +86,7 @@ describe("MockPaymentProvider", () => {
         reservaEventoId: "evt_1",
         valor: 100,
         metodo: "cartao",
+        clienteEmail: "cliente@exemplo.com",
       });
 
       expect(resultado.status).toBe("recusado");

@@ -50,6 +50,7 @@ describe("MercadoPagoProvider", () => {
         reservaEventoId: "evt_1",
         valor: 1100,
         metodo: "pix",
+        clienteEmail: "cliente@exemplo.com",
       });
 
       expect(resultado.status).toBe("pendente");
@@ -60,10 +61,39 @@ describe("MercadoPagoProvider", () => {
       expect(resultado.dadosPix?.expiraEm).toBeTruthy();
     });
 
+    it("usa o e-mail real do cliente no pagamento, não um e-mail sintético", async () => {
+      paymentCreateMock.mockResolvedValueOnce({
+        id: 1,
+        status: "pending",
+        point_of_interaction: {
+          transaction_data: { qr_code: "codigo", qr_code_base64: "base64" },
+        },
+      });
+
+      const provider = new MercadoPagoProvider();
+      await provider.iniciarPagamento({
+        reservaEventoId: "evt_1",
+        valor: 100,
+        metodo: "pix",
+        clienteEmail: "cliente-de-verdade@exemplo.com",
+      });
+
+      expect(paymentCreateMock).toHaveBeenCalledWith(
+        expect.objectContaining({
+          body: expect.objectContaining({ payer: { email: "cliente-de-verdade@exemplo.com" } }),
+        })
+      );
+    });
+
     it("lança erro para valor zero ou negativo", async () => {
       const provider = new MercadoPagoProvider();
       await expect(
-        provider.iniciarPagamento({ reservaEventoId: "evt_1", valor: 0, metodo: "pix" })
+        provider.iniciarPagamento({
+          reservaEventoId: "evt_1",
+          valor: 0,
+          metodo: "pix",
+          clienteEmail: "cliente@exemplo.com",
+        })
       ).rejects.toThrow();
       expect(paymentCreateMock).not.toHaveBeenCalled();
     });
@@ -71,7 +101,12 @@ describe("MercadoPagoProvider", () => {
     it("lança erro para método diferente de pix", async () => {
       const provider = new MercadoPagoProvider();
       await expect(
-        provider.iniciarPagamento({ reservaEventoId: "evt_1", valor: 100, metodo: "cartao" })
+        provider.iniciarPagamento({
+          reservaEventoId: "evt_1",
+          valor: 100,
+          metodo: "cartao",
+          clienteEmail: "cliente@exemplo.com",
+        })
       ).rejects.toThrow();
       expect(paymentCreateMock).not.toHaveBeenCalled();
     });
@@ -81,7 +116,12 @@ describe("MercadoPagoProvider", () => {
 
       const provider = new MercadoPagoProvider();
       await expect(
-        provider.iniciarPagamento({ reservaEventoId: "evt_1", valor: 100, metodo: "pix" })
+        provider.iniciarPagamento({
+          reservaEventoId: "evt_1",
+          valor: 100,
+          metodo: "pix",
+          clienteEmail: "cliente@exemplo.com",
+        })
       ).rejects.toThrow();
     });
   });

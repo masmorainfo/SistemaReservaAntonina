@@ -44,7 +44,7 @@ export class MercadoPagoProvider implements PaymentProvider {
       body: {
         transaction_amount: input.valor,
         payment_method_id: "pix",
-        payer: { email: `reserva-${input.reservaEventoId}@antoninaosteria.com` },
+        payer: { email: input.clienteEmail },
         date_of_expiration: expiraEm,
         description: `Sinal de reserva de evento ${input.reservaEventoId}`,
       },

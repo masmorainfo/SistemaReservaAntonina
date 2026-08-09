@@ -160,6 +160,8 @@ describe("POST /api/webhooks/mercadopago", () => {
     expect(estornarMock).toHaveBeenCalledWith("ref-tardio-1", 2200);
     const reservaAposWebhook = await prisma.reservaEvento.findUnique({ where: { id: reserva.id } });
     expect(reservaAposWebhook?.status).toBe("CANCELADA");
+    expect(Number(reservaAposWebhook?.valorReembolso)).toBe(2200);
+    expect(Number(reservaAposWebhook?.percentualReembolsoAplicado)).toBe(100);
     const pagamentoAposWebhook = await prisma.pagamento.findUnique({ where: { reservaEventoId: reserva.id } });
     expect(pagamentoAposWebhook?.status).toBe("APROVADO");
   });

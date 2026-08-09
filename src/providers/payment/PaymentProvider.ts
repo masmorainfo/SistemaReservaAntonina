@@ -6,6 +6,7 @@ export interface IniciarPagamentoInput {
   reservaEventoId: string;
   valor: number;
   metodo: MetodoPagamento;
+  clienteEmail: string;
 }
 
 export interface DadosPix {

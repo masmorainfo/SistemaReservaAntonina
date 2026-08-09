@@ -197,4 +197,33 @@ describe("POST /api/eventos/reservas/[id]/pagamento", () => {
     const pagamentoNoBanco = await prisma.pagamento.findUnique({ where: { reservaEventoId: reserva.id } });
     expect(pagamentoNoBanco?.referenciaExterna).toBe("ref-fake-123");
   });
+
+  it("repassa o e-mail real do cliente ao iniciar o pagamento", async () => {
+    const iniciarPagamentoMock = vi.fn().mockResolvedValue({
+      provedor: "fake-email",
+      status: "aprovado" as const,
+      referenciaExterna: "ref-email-123",
+    });
+
+    vi.spyOn(getPaymentProviderModule, "getPaymentProvider").mockReturnValue({
+      nome: "fake-email",
+      iniciarPagamento: iniciarPagamentoMock,
+      validarWebhook: vi.fn(),
+      consultarStatus: vi.fn(),
+      estornar: vi.fn(),
+    });
+
+    const reserva = await criarHold(daquiADias(35), new Date(Date.now() + 10 * 60 * 1000));
+
+    const request = new NextRequest(`http://localhost/api/eventos/reservas/${reserva.id}/pagamento`, {
+      method: "POST",
+      body: JSON.stringify({ metodo: "pix" }),
+    });
+
+    await POST(request, { params: Promise.resolve({ id: reserva.id }) });
+
+    expect(iniciarPagamentoMock).toHaveBeenCalledWith(
+      expect.objectContaining({ clienteEmail: "teste@exemplo.com" })
+    );
+  });
 });
