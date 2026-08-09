@@ -3,6 +3,7 @@ import { NextRequest } from "next/server";
 import { prisma } from "@/lib/db";
 import { daquiADias } from "@/test-utils/datas";
 import * as getPaymentProviderModule from "@/providers/payment/getPaymentProvider";
+import type { StatusPagamentoResultado, ResultadoEstorno, PaymentProvider } from "@/providers/payment/PaymentProvider";
 import { POST } from "./route";
 
 function fazerRequest(dataId: string, assinatura = "assinatura-qualquer") {
@@ -14,15 +15,15 @@ function fazerRequest(dataId: string, assinatura = "assinatura-qualquer") {
 }
 
 function providerFake(overrides: {
-  validarWebhook: (payload: unknown, assinatura: string) => Promise<{ referenciaExterna: string; status: string }>;
+  validarWebhook: (payload: unknown, assinatura: string) => Promise<{ referenciaExterna: string; status: StatusPagamentoResultado }>;
   estornar?: ReturnType<typeof vi.fn>;
-}) {
+}): PaymentProvider {
   return {
     nome: "fake",
     iniciarPagamento: vi.fn(),
     validarWebhook: overrides.validarWebhook,
     consultarStatus: vi.fn(),
-    estornar: overrides.estornar ?? vi.fn().mockResolvedValue({ referenciaExterna: "x", valorEstornado: 0, status: "aprovado" }),
+    estornar: (overrides.estornar ?? vi.fn().mockResolvedValue({ referenciaExterna: "x", valorEstornado: 0, status: "aprovado" })) as (referenciaExterna: string, valor: number) => Promise<ResultadoEstorno>,
   };
 }
 
