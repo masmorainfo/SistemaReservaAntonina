@@ -1,4 +1,4 @@
-import { createHmac } from "node:crypto";
+import { createHmac, timingSafeEqual } from "node:crypto";
 
 export interface ParametrosAssinatura {
   /** Valor bruto do header x-signature (formato "ts=...,v1=..."). */
@@ -42,6 +42,12 @@ export function validarAssinaturaWebhook(params: ParametrosAssinatura): boolean 
 
   const manifest = `id:${params.dataId};request-id:${params.requestId};ts:${partes.ts};`;
   const hashEsperado = createHmac("sha256", params.segredo).update(manifest).digest("hex");
+  const bufferEsperado = Buffer.from(hashEsperado, "hex");
+  const bufferRecebido = Buffer.from(partes.v1, "hex");
 
-  return hashEsperado === partes.v1;
+  if (bufferEsperado.length !== bufferRecebido.length) {
+    return false;
+  }
+
+  return timingSafeEqual(bufferEsperado, bufferRecebido);
 }

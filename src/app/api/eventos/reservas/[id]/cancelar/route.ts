@@ -41,13 +41,20 @@ export async function POST(request: NextRequest, { params }: { params: Promise<{
   const tiers = await buscarTiersPoliticaCancelamento();
   const dias = diasEntre(reserva.data, new Date());
   const percentualReembolso = calcularPercentualReembolso(dias, tiers);
-  const valorReembolso = Math.round(Number(reserva.valorTotal) * (percentualReembolso / 100) * 100) / 100;
+
+  // Base do reembolso é o que foi de fato cobrado e pago (o sinal, que pode
+  // ser qualquer percentual 0-100 de reserva.valorTotal, negociado por
+  // telefone via /api/admin/eventos/[id]/sinal), não o valor total do
+  // evento — não é possível estornar dinheiro que nunca foi recebido.
+  const valorPago = reserva.pagamento ? Number(reserva.pagamento.valor) : 0;
+  const valorReembolso = Math.round(valorPago * (percentualReembolso / 100) * 100) / 100;
 
   if (reserva.pagamento && reserva.pagamento.status === "APROVADO" && valorReembolso > 0) {
     const provider = getPaymentProvider();
     try {
       await provider.estornar(reserva.pagamento.referenciaExterna, valorReembolso);
-    } catch {
+    } catch (erroEstorno) {
+      console.error("falha ao estornar no cancelamento", reserva.id, erroEstorno);
       return NextResponse.json(
         { erro: "não foi possível processar o estorno junto ao provedor de pagamento; tente novamente" },
         { status: 502 }

@@ -39,6 +39,18 @@ describe("POST /api/eventos/reservas/[id]/cancelar", () => {
         status: "CONFIRMADA",
       },
     });
+    // percentualSinal não foi informado (default 100), então o sinal pago
+    // equivale ao valorTotal — o Pagamento abaixo reflete isso.
+    await prisma.pagamento.create({
+      data: {
+        reservaEventoId: reserva.id,
+        provedor: "mock",
+        metodo: "PIX",
+        valor: 1100,
+        status: "APROVADO",
+        referenciaExterna: "ref-cancelamento-base",
+      },
+    });
 
     const request = new NextRequest(`http://localhost/api/eventos/reservas/${reserva.id}/cancelar`, {
       method: "POST",
@@ -124,6 +136,58 @@ describe("POST /api/eventos/reservas/[id]/cancelar", () => {
     expect(response.status).toBe(200);
     expect(body.reserva.status).toBe("CANCELADA");
     expect(estornarMock).toHaveBeenCalledWith("ref-cancelamento-1", 1100);
+  });
+
+  it("calcula o estorno com base no valor pago (sinal parcial), não no valorTotal do evento", async () => {
+    const reserva = await prisma.reservaEvento.create({
+      data: {
+        clienteNome: "Cliente Sinal Parcial",
+        clienteTelefone: "+5541999999999",
+        clienteEmail: "sinal-parcial@exemplo.com",
+        tipoEvento: "ANIVERSARIO",
+        data: daquiADias(23),
+        numConvidados: 10,
+        pacoteId,
+        valorTotal: 1100,
+        percentualSinal: 50,
+        status: "CONFIRMADA",
+      },
+    });
+    await prisma.pagamento.create({
+      data: {
+        reservaEventoId: reserva.id,
+        provedor: "mercadopago",
+        metodo: "PIX",
+        valor: 550,
+        status: "APROVADO",
+        referenciaExterna: "ref-cancelamento-sinal-parcial",
+      },
+    });
+
+    const estornarMock = vi.fn().mockResolvedValue({
+      referenciaExterna: "ref-cancelamento-sinal-parcial",
+      valorEstornado: 550,
+      status: "aprovado",
+    });
+    vi.spyOn(getPaymentProviderModule, "getPaymentProvider").mockReturnValue({
+      nome: "fake",
+      iniciarPagamento: vi.fn(),
+      validarWebhook: vi.fn(),
+      consultarStatus: vi.fn(),
+      estornar: estornarMock,
+    });
+
+    const request = new NextRequest(`http://localhost/api/eventos/reservas/${reserva.id}/cancelar`, {
+      method: "POST",
+    });
+    const response = await POST(request, { params: Promise.resolve({ id: reserva.id }) });
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    expect(body.reserva.status).toBe("CANCELADA");
+    expect(body.reserva.percentualReembolsoAplicado).toBe("100");
+    expect(body.reserva.valorReembolso).toBe("550");
+    expect(estornarMock).toHaveBeenCalledWith("ref-cancelamento-sinal-parcial", 550);
   });
 
   it("não cancela a reserva quando o estorno falha", async () => {

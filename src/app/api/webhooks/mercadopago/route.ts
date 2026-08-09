@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { getPaymentProvider } from "@/providers/payment/getPaymentProvider";
 import { paraStatusPagamentoEnum } from "@/providers/payment/mappers";
@@ -17,6 +18,10 @@ export async function POST(request: NextRequest) {
   const dataId = request.nextUrl.searchParams.get("data.id") ?? "";
 
   const provider = getPaymentProvider();
+
+  if (provider.nome !== "mercadopago") {
+    return NextResponse.json({ erro: "webhook não disponível para este provider" }, { status: 404 });
+  }
 
   let resultado;
   try {
@@ -79,19 +84,47 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ ok: true });
   }
 
-  await prisma.$transaction([
-    prisma.pagamento.update({
-      where: { id: pagamento.id },
-      data: { status: novoStatusPagamento },
-    }),
-    prisma.reservaEvento.update({
-      where: { id: reserva.id },
-      data: {
-        status: resultado.status === "aprovado" ? "CONFIRMADA" : "CANCELADA",
-        holdExpiresAt: null,
-      },
-    }),
-  ]);
+  try {
+    const [, resultadoUpdateReserva] = await prisma.$transaction([
+      prisma.pagamento.update({
+        where: { id: pagamento.id },
+        data: { status: novoStatusPagamento },
+      }),
+      prisma.reservaEvento.updateMany({
+        where: { id: reserva.id, status: "AGUARDANDO_PAGAMENTO" },
+        data: {
+          status: resultado.status === "aprovado" ? "CONFIRMADA" : "CANCELADA",
+          holdExpiresAt: null,
+        },
+      }),
+    ]);
+
+    if (resultadoUpdateReserva.count === 0) {
+      // A reserva saiu de AGUARDANDO_PAGAMENTO entre a leitura e esta
+      // transação (corrida com liberarHoldsExpirados ou com outra entrega do
+      // mesmo webhook). O Pagamento já foi marcado acima; se o pagamento foi
+      // aprovado mas a reserva não pôde ser confirmada, isso precisa do mesmo
+      // tratamento do caso "pagamento tardio" (ver bloco anterior no arquivo)
+      // — registrar para acompanhamento manual em vez de silenciosamente
+      // deixar dinheiro em um estado ambíguo.
+      console.error(
+        "reserva saiu de AGUARDANDO_PAGAMENTO durante o processamento do webhook",
+        reserva.id,
+        pagamento.id
+      );
+    }
+  } catch (erro) {
+    if (erro instanceof Prisma.PrismaClientKnownRequestError && erro.code === "P2002") {
+      // A data já foi ocupada por outra reserva entre a leitura e esta
+      // transação (reserva_evento_unica_ativa_por_dia). O Pagamento já não
+      // pôde ser marcado nesta transação (ela inteira reverteu) — registra
+      // para acompanhamento manual e ainda assim confirma o recebimento do
+      // webhook (200), para não entrar em loop de reentregas do Mercado Pago.
+      console.error("conflito de data ao confirmar reserva via webhook", reserva.id, erro);
+      return NextResponse.json({ ok: true });
+    }
+    throw erro;
+  }
 
   return NextResponse.json({ ok: true });
 }

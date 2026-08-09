@@ -1,5 +1,6 @@
 import { describe, it, expect, vi, beforeAll, afterAll, afterEach } from "vitest";
 import { NextRequest } from "next/server";
+import { Prisma } from "@prisma/client";
 import { prisma } from "@/lib/db";
 import { daquiADias } from "@/test-utils/datas";
 import * as getPaymentProviderModule from "@/providers/payment/getPaymentProvider";
@@ -19,7 +20,7 @@ function providerFake(overrides: {
   estornar?: ReturnType<typeof vi.fn>;
 }): PaymentProvider {
   return {
-    nome: "fake",
+    nome: "mercadopago",
     iniciarPagamento: vi.fn(),
     validarWebhook: overrides.validarWebhook,
     consultarStatus: vi.fn(),
@@ -176,5 +177,88 @@ describe("POST /api/webhooks/mercadopago", () => {
     const response = await POST(fazerRequest("ref-tardio-2"));
     expect(response.status).toBe(200);
     expect(estornarMock).not.toHaveBeenCalled();
+  });
+
+  it("retorna 200 sem sobrescrever quando a reserva saiu de AGUARDANDO_PAGAMENTO entre a leitura e a transação do webhook (corrida)", async () => {
+    const reserva = await criarReservaComPagamento("AGUARDANDO_PAGAMENTO", "ref-corrida-1", "PENDENTE", 43);
+
+    // Simula a corrida descrita no fix: no momento em que a transação desta
+    // requisição roda, a reserva já foi liberada no banco de verdade (ex.:
+    // por liberarHoldsExpirados ou por outra entrega concorrente do mesmo
+    // webhook) — mas a leitura que esta requisição fez enxergou o snapshot
+    // anterior (AGUARDANDO_PAGAMENTO). Reproduzido interceptando essa leitura
+    // para retornar o snapshot antigo, enquanto o banco real já está CANCELADA.
+    //
+    // Nota: usamos substituição direta da propriedade (em vez de
+    // vi.spyOn(...).mockRestore()) porque, neste ambiente, restaurar um spy
+    // sobre um método do model delegate do Prisma o deixa `undefined`
+    // permanentemente — quebrando todos os testes seguintes deste arquivo.
+    await prisma.reservaEvento.update({
+      where: { id: reserva.id },
+      data: { status: "CANCELADA", holdExpiresAt: null },
+    });
+
+    const originalFindUnique = prisma.reservaEvento.findUnique.bind(prisma.reservaEvento);
+    let chamadas = 0;
+    prisma.reservaEvento.findUnique = ((...args: unknown[]) => {
+      chamadas += 1;
+      if (chamadas === 1) {
+        return Promise.resolve({ ...reserva });
+      }
+      return (originalFindUnique as (...a: unknown[]) => unknown)(...args);
+    }) as unknown as typeof prisma.reservaEvento.findUnique;
+
+    vi.spyOn(getPaymentProviderModule, "getPaymentProvider").mockReturnValue(
+      providerFake({ validarWebhook: async () => ({ referenciaExterna: "ref-corrida-1", status: "aprovado" }) })
+    );
+
+    try {
+      const response = await POST(fazerRequest("ref-corrida-1"));
+      expect(response.status).toBe(200);
+    } finally {
+      prisma.reservaEvento.findUnique = originalFindUnique;
+    }
+
+    const reservaFinal = await prisma.reservaEvento.findUnique({ where: { id: reserva.id } });
+    expect(reservaFinal?.status).toBe("CANCELADA");
+  });
+
+  it("retorna 200 (não 500) quando a transação de confirmação falha com P2002 (conflito de data)", async () => {
+    const reserva = await criarReservaComPagamento("AGUARDANDO_PAGAMENTO", "ref-p2002-1", "PENDENTE", 44);
+
+    // Simula o conflito de data descrito no fix (outra reserva ocupou a
+    // mesma data entre a leitura e a transação, violando
+    // reserva_evento_unica_ativa_por_dia): rejeitamos a própria chamada de
+    // $transaction com o erro que o Postgres/Prisma produziriam nesse caso,
+    // exercitando o catch de P2002 diretamente. Substituição direta da
+    // propriedade pelo mesmo motivo explicado no teste acima.
+    const originalTransaction = prisma.$transaction.bind(prisma);
+    let chamadas = 0;
+    prisma.$transaction = ((...args: unknown[]) => {
+      chamadas += 1;
+      if (chamadas === 1) {
+        return Promise.reject(
+          new Prisma.PrismaClientKnownRequestError("conflito de unicidade em reserva_evento_unica_ativa_por_dia", {
+            code: "P2002",
+            clientVersion: "test",
+          })
+        );
+      }
+      return (originalTransaction as (...a: unknown[]) => unknown)(...args);
+    }) as unknown as typeof prisma.$transaction;
+
+    vi.spyOn(getPaymentProviderModule, "getPaymentProvider").mockReturnValue(
+      providerFake({ validarWebhook: async () => ({ referenciaExterna: "ref-p2002-1", status: "aprovado" }) })
+    );
+
+    try {
+      const response = await POST(fazerRequest("ref-p2002-1"));
+      expect(response.status).toBe(200);
+    } finally {
+      prisma.$transaction = originalTransaction;
+    }
+
+    const reservaFinal = await prisma.reservaEvento.findUnique({ where: { id: reserva.id } });
+    expect(reservaFinal?.status).toBe("AGUARDANDO_PAGAMENTO");
   });
 });
