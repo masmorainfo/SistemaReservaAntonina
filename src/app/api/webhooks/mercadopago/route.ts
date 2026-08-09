@@ -40,7 +40,6 @@ export async function POST(request: NextRequest) {
   }
 
   const novoStatusPagamento = paraStatusPagamentoEnum(resultado.status);
-  const jaProcessadoNesseStatus = pagamento.status === novoStatusPagamento;
 
   const reserva = await prisma.reservaEvento.findUnique({
     where: { id: pagamento.reservaEventoId },
@@ -54,23 +53,26 @@ export async function POST(request: NextRequest) {
     // A reserva já saiu do estado de espera — hold expirou e foi liberado
     // (a reserva vira CANCELADA), já foi confirmada por um webhook anterior,
     // ou isto é a reentrega de uma notificação já processada.
-    if (!jaProcessadoNesseStatus) {
-      await prisma.pagamento.update({
-        where: { id: pagamento.id },
-        data: { status: novoStatusPagamento },
-      });
+    // updateMany com filtro no status atual torna a transição atômica: sob
+    // redeliveries quase simultâneas do mesmo evento, o Postgres serializa
+    // os UPDATEs via lock de linha e apenas uma requisição "vence" a corrida
+    // (count > 0). Isso evita que duas chamadas concorrentes leiam o mesmo
+    // status pendente e disparem estorno em duplicidade.
+    const atualizacao = await prisma.pagamento.updateMany({
+      where: { id: pagamento.id, status: { not: novoStatusPagamento } },
+      data: { status: novoStatusPagamento },
+    });
 
-      if (resultado.status === "aprovado" && reserva.status === "CANCELADA") {
-        // Dinheiro aprovado depois que o slot já foi liberado — estorna
-        // automaticamente, não fica retido por um evento que não vai
-        // acontecer. Falha aqui não deve travar o ack do webhook (o
-        // Mercado Pago reenviaria indefinidamente); fica registrado para
-        // acompanhamento manual.
-        try {
-          await provider.estornar(resultado.referenciaExterna, Number(pagamento.valor));
-        } catch (erroEstorno) {
-          console.error("falha ao estornar pagamento tardio", pagamento.id, erroEstorno);
-        }
+    if (atualizacao.count > 0 && resultado.status === "aprovado" && reserva.status === "CANCELADA") {
+      // Dinheiro aprovado depois que o slot já foi liberado — estorna
+      // automaticamente, não fica retido por um evento que não vai
+      // acontecer. Falha aqui não deve travar o ack do webhook (o
+      // Mercado Pago reenviaria indefinidamente); fica registrado para
+      // acompanhamento manual.
+      try {
+        await provider.estornar(resultado.referenciaExterna, Number(pagamento.valor));
+      } catch (erroEstorno) {
+        console.error("falha ao estornar pagamento tardio", pagamento.id, erroEstorno);
       }
     }
 
