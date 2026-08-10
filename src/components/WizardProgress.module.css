@@ -10,8 +10,7 @@
   font-size: 0.8rem;
   letter-spacing: 0.04em;
   text-transform: uppercase;
-  color: var(--text-on-paper);
-  opacity: 0.45;
+  color: var(--text-muted-on-paper);
   padding-bottom: var(--space-xs);
   border-bottom: 2px solid transparent;
 }

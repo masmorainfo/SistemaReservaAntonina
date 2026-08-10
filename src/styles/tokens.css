@@ -8,6 +8,7 @@
   --paper: #f4efe9;
   --paper-border: #d8c9bd;
   --text-on-paper: #3d312c;
+  --text-muted-on-paper: #6b5d56;
 
   /* Tipografia — as variáveis --font-fraunces e --font-work-sans são
      definidas pelo next/font em layout.tsx */
