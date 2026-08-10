@@ -3,6 +3,8 @@
 import { useState } from "react";
 import type { ZonaClicavel } from "@/providers/tableMap/TableMapProvider";
 import type { MesaDisponivel } from "@/types/reservaMesa";
+import { WizardProgress, type WizardStep } from "@/components/WizardProgress";
+import styles from "./ReservaMesaWizard.module.css";
 
 interface Ambiente {
   id: string;
@@ -15,6 +17,12 @@ interface ReservaMesaWizardProps {
 }
 
 type Etapa = "quando" | "onde" | "dados" | "confirmado";
+
+const PASSOS: WizardStep[] = [
+  { key: "quando", label: "Quando" },
+  { key: "onde", label: "Onde" },
+  { key: "dados", label: "Dados" },
+];
 
 export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWizardProps) {
   const [etapa, setEtapa] = useState<Etapa>("quando");
@@ -124,30 +132,41 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
   if (etapa === "confirmado") {
     const mesa = mesasDisponiveis.find((m) => m.id === mesaSelecionadaId);
     return (
-      <p role="status">
+      <p role="status" className={styles.mensagemSucesso}>
         Reserva confirmada para {nomeCliente} — mesa {mesa?.numero}, {data} às {horarioChegada}.
       </p>
     );
   }
 
   return (
-    <div>
-      {erro && <p role="alert">{erro}</p>}
+    <div className={styles.wizard}>
+      <WizardProgress steps={PASSOS} currentKey={etapa} />
+
+      {erro && (
+        <p role="alert" className={styles.mensagemErro}>
+          {erro}
+        </p>
+      )}
 
       {etapa === "quando" && (
-        <fieldset>
+        <fieldset className={styles.fieldset}>
           <legend>Quando você quer vir?</legend>
-          <label>
+          <label className={styles.campo}>
             Data
             <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
           </label>
-          <button type="button" onClick={buscarHorarios} disabled={!data || carregando}>
+          <button
+            type="button"
+            className={styles.botaoPrimario}
+            onClick={buscarHorarios}
+            disabled={!data || carregando}
+          >
             Ver horários
           </button>
 
           {horarios.length > 0 && (
             <>
-              <label>
+              <label className={styles.campo}>
                 Horário
                 <select value={horarioChegada} onChange={(e) => setHorarioChegada(e.target.value)}>
                   <option value="">Selecione</option>
@@ -158,7 +177,7 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
                   ))}
                 </select>
               </label>
-              <label>
+              <label className={styles.campo}>
                 Número de pessoas
                 <input
                   type="number"
@@ -169,6 +188,7 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
               </label>
               <button
                 type="button"
+                className={styles.botaoPrimario}
                 onClick={avancarParaEscolhaDeMesa}
                 disabled={!horarioChegada || numPessoas < 1}
               >
@@ -180,13 +200,14 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
       )}
 
       {etapa === "onde" && (
-        <fieldset>
+        <fieldset className={styles.fieldset}>
           <legend>Onde você quer sentar?</legend>
-          <div role="group" aria-label="Escolha o ambiente">
+          <div role="group" aria-label="Escolha o ambiente" className={styles.grupoAmbientes}>
             {ambientes.map((ambiente) => (
               <button
                 key={ambiente.id}
                 type="button"
+                className={styles.botaoAmbiente}
                 aria-pressed={ambiente.id === ambienteSelecionadoId}
                 onClick={() => trocarAmbiente(ambiente.id)}
               >
@@ -197,7 +218,7 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
 
           <div
             aria-label={`Mapa do ambiente ${ambientes.find((a) => a.id === ambienteSelecionadoId)?.nome ?? ""}`}
-            style={{ position: "relative" }}
+            className={styles.mapa}
           >
             {zonasPorAmbiente[ambienteSelecionadoId]
               ?.filter((zona) => mesasDisponiveis.some((mesa) => mesa.id === zona.mesaId))
@@ -205,8 +226,8 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
                 <button
                   key={zona.mesaId}
                   type="button"
+                  className={styles.mesaNoMapa}
                   style={{
-                    position: "absolute",
                     left: `${zona.coordenadas.x}%`,
                     top: `${zona.coordenadas.y}%`,
                     width: `${zona.coordenadas.largura}%`,
@@ -221,11 +242,12 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
           </div>
 
           <p>Lista de mesas disponíveis (alternativa acessível ao mapa):</p>
-          <ul>
+          <ul className={styles.listaMesas}>
             {mesasDisponiveis.map((mesa) => (
               <li key={mesa.id}>
                 <button
                   type="button"
+                  className={styles.botaoMesa}
                   aria-pressed={mesa.id === mesaSelecionadaId}
                   onClick={() => setMesaSelecionadaId(mesa.id)}
                 >
@@ -236,25 +258,31 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
             ))}
           </ul>
 
-          <button type="button" onClick={() => setEtapa("dados")} disabled={!mesaSelecionadaId}>
+          <button
+            type="button"
+            className={styles.botaoPrimario}
+            onClick={() => setEtapa("dados")}
+            disabled={!mesaSelecionadaId}
+          >
             Continuar
           </button>
         </fieldset>
       )}
 
       {etapa === "dados" && (
-        <fieldset>
+        <fieldset className={styles.fieldset}>
           <legend>Seus dados</legend>
-          <label>
+          <label className={styles.campo}>
             Nome
             <input value={nomeCliente} onChange={(e) => setNomeCliente(e.target.value)} />
           </label>
-          <label>
+          <label className={styles.campo}>
             Telefone
             <input value={telefone} onChange={(e) => setTelefone(e.target.value)} />
           </label>
           <button
             type="button"
+            className={styles.botaoPrimario}
             onClick={confirmarReserva}
             disabled={!nomeCliente.trim() || !telefone.trim() || carregando}
           >

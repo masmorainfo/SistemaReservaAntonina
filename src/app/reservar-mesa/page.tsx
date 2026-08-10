@@ -3,6 +3,9 @@ import { FallbackMapProvider } from "@/providers/tableMap/FallbackMapProvider";
 import { carregarZonasDoAmbiente } from "@/lib/tableMap/loadZonesFromDb";
 import { ReservaMesaWizard } from "./ReservaMesaWizard";
 import type { ZonaClicavel } from "@/providers/tableMap/TableMapProvider";
+import { SiteNav } from "@/components/SiteNav";
+import { Footer } from "@/components/Footer";
+import styles from "./page.module.css";
 
 // Esta página lê dados ao vivo via Prisma (lista de ambientes, coordenadas do
 // mapa) a cada requisição. Prisma não é uma "dynamic API" do Next.js, então
@@ -35,12 +38,18 @@ export default async function ReservarMesaPage() {
   }
 
   return (
-    <main>
-      <h1>Reservar Mesa</h1>
-      <ReservaMesaWizard
-        ambientes={ambientes.map((a) => ({ id: a.id, nome: a.nome }))}
-        zonasPorAmbiente={zonasPorAmbiente}
-      />
-    </main>
+    <>
+      <SiteNav />
+      <main className={styles.pagina}>
+        <div className="container">
+          <h1 className={styles.titulo}>Reservar Mesa</h1>
+          <ReservaMesaWizard
+            ambientes={ambientes.map((a) => ({ id: a.id, nome: a.nome }))}
+            zonasPorAmbiente={zonasPorAmbiente}
+          />
+        </div>
+      </main>
+      <Footer />
+    </>
   );
 }

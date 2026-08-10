@@ -1,0 +1,123 @@
+.wizard {
+  max-width: 560px;
+}
+
+.fieldset {
+  border: none;
+  padding: 0;
+  margin: 0;
+}
+
+.fieldset legend {
+  font-family: var(--font-display);
+  font-size: 1.3rem;
+  margin-bottom: var(--space-md);
+  padding: 0;
+}
+
+.campo {
+  display: block;
+  margin-bottom: var(--space-md);
+  font-size: 0.85rem;
+  color: var(--text-on-paper);
+}
+
+.campo input,
+.campo select {
+  display: block;
+  width: 100%;
+  margin-top: var(--space-xs);
+  padding: 0.6rem 0.7rem;
+  background: #fff;
+  border: 1px solid var(--paper-border);
+  font-family: var(--font-body);
+  font-size: 0.95rem;
+}
+
+.botaoPrimario {
+  background: var(--wine);
+  color: var(--paper);
+  border: none;
+  padding: 0.75rem 1.5rem;
+  font-size: 0.9rem;
+  letter-spacing: 0.03em;
+  cursor: pointer;
+}
+
+.botaoPrimario:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.mensagemErro {
+  border: 1px solid var(--wine);
+  color: var(--wine);
+  padding: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.mensagemSucesso {
+  border: 1px solid var(--gold-accent);
+  padding: var(--space-md);
+  max-width: 560px;
+}
+
+.grupoAmbientes {
+  display: flex;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.botaoAmbiente {
+  padding: 0.5rem 1rem;
+  background: #fff;
+  border: 1px solid var(--paper-border);
+  cursor: pointer;
+}
+
+.botaoAmbiente[aria-pressed="true"] {
+  background: var(--wine);
+  color: var(--paper);
+  border-color: var(--wine);
+}
+
+.mapa {
+  position: relative;
+  margin-bottom: var(--space-md);
+  border: 1px solid var(--paper-border);
+  aspect-ratio: 16 / 9;
+}
+
+.mesaNoMapa {
+  position: absolute;
+  background: rgba(92, 58, 63, 0.75);
+  color: var(--paper);
+  border: 1px solid var(--gold-accent);
+  font-size: 0.7rem;
+  cursor: pointer;
+}
+
+.mesaNoMapa[aria-pressed="true"] {
+  background: var(--wine);
+}
+
+.listaMesas {
+  list-style: none;
+  padding: 0;
+  margin-bottom: var(--space-md);
+}
+
+.botaoMesa {
+  width: 100%;
+  text-align: left;
+  padding: 0.6rem 0.8rem;
+  margin-bottom: var(--space-xs);
+  background: #fff;
+  border: 1px solid var(--paper-border);
+  cursor: pointer;
+}
+
+.botaoMesa[aria-pressed="true"] {
+  border-color: var(--wine);
+  background: rgba(92, 58, 63, 0.08);
+}

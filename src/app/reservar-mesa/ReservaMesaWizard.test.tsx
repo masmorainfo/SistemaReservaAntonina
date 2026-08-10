@@ -32,3 +32,11 @@ describe("ReservaMesaWizard", () => {
     });
   });
 });
+
+describe("ReservaMesaWizard — indicador de progresso", () => {
+  it("mostra 'Quando' como etapa atual ao carregar", () => {
+    render(<ReservaMesaWizard ambientes={[]} zonasPorAmbiente={{}} />);
+    const passoAtual = screen.getByText("Quando").closest("li");
+    expect(passoAtual).toHaveAttribute("aria-current", "step");
+  });
+});
