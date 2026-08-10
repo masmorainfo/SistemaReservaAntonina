@@ -1,0 +1,27 @@
+:root {
+  /* Cores */
+  --bg-dark: #1c1a1d;
+  --bg-dark-elevated: #2c2226;
+  --text-cream: #e8ded1;
+  --gold-accent: #c9a24a;
+  --wine: #5c3a3f;
+  --paper: #f4efe9;
+  --paper-border: #d8c9bd;
+  --text-on-paper: #3d312c;
+
+  /* Tipografia — as variáveis --font-fraunces e --font-work-sans são
+     definidas pelo next/font em layout.tsx */
+  --font-display: var(--font-fraunces), Georgia, "Times New Roman", serif;
+  --font-body: var(--font-work-sans), -apple-system, BlinkMacSystemFont, sans-serif;
+
+  /* Espaçamento */
+  --space-xs: 0.5rem;
+  --space-sm: 1rem;
+  --space-md: 1.5rem;
+  --space-lg: 2.5rem;
+  --space-xl: 4rem;
+  --space-section: clamp(3rem, 2rem + 4vw, 6rem);
+
+  /* Layout */
+  --container-max: 1200px;
+}
