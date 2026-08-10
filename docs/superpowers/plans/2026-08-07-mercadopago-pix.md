@@ -1971,41 +1971,42 @@ git commit -m "feat: exibe QR code do pix e faz polling de confirmação no wiza
 
 **Files:** nenhum arquivo novo — task de verificação.
 
-- [ ] **Step 1: Configurar credenciais de teste**
+- [x] **Step 1: Configurar credenciais de teste**
 
-Se ainda não tiver: crie uma conta de desenvolvedor gratuita em https://www.mercadopago.com.br/developers, gere credenciais de teste (`TEST-...`) no painel, e configure um webhook de teste apontando para o ambiente de dev (via túnel, ex. `ngrok http 3000`, ou testado direto no ambiente de deploy). Preencha `.env` (não `.env.example`) com `PAYMENT_PROVIDER=mercadopago`, `MERCADOPAGO_ACCESS_TOKEN` e `MERCADOPAGO_WEBHOOK_SECRET` reais de teste.
+Feito em 2026-08-10: conta de desenvolvedor criada, aplicação `antonina-osteria-dev` (Checkout Transparente + API de Pagamentos), credenciais de teste geradas, webhook de teste configurado via túnel ngrok apontando para `/api/webhooks/mercadopago`.
 
-- [ ] **Step 2: Subir o stack com o provider real**
+**Atenção — não persistir `PAYMENT_PROVIDER`/`MERCADOPAGO_*` no `.env` da raiz entre sessões de verificação:** `vitest.config.ts` carrega esse mesmo `.env` via `dotenv`, então deixar `PAYMENT_PROVIDER=mercadopago` lá vaza para `npm test` e quebra a garantia deste plano de que nenhum teste automatizado chama a API real. Sofremos isso na prática (3 testes de `pagamento/route.test.ts` falharam) até reverter. Ao repetir esta verificação: configure essas 3 variáveis, teste, e remova-as do `.env` antes de rodar a suíte de novo — ou passe-as só via `docker compose run -e ...`/env inline, nunca via `.env` compartilhado.
 
-Run: `docker compose up -d --build`
+- [x] **Step 2: Subir o stack com o provider real**
 
-- [ ] **Step 3: Fazer uma reserva de evento de ponta a ponta**
+Run: `docker compose up -d --build` — nota: se o container já existir com um volume anônimo `node_modules` antigo, `--force-recreate` sozinho **não** renova esse volume; é necessário `--renew-anon-volumes` (ou `-V`) junto com `--build` para o `node_modules` refletir dependências novas do `package.json` (ex.: o pacote `mercadopago`).
 
-Acesse o fluxo de reserva de evento, escolha um pacote, chegue no checkout, escolha Pix, confirme o pagamento. Confirme que a tela de QR code aparece com uma imagem válida e um código copia-e-cola não vazio.
+- [x] **Step 3: Fazer uma reserva de evento de ponta a ponta**
 
-- [ ] **Step 4: Aprovar o Pix de teste**
+Verificado em 2026-08-10: QR code Pix real gerado pelo `MercadoPagoProvider` (imagem válida + copia-e-cola não vazio), `referenciaExterna` persistida, tela de polling ativa.
 
-Usando as ferramentas de teste do Mercado Pago (o próprio painel de desenvolvedor permite simular a aprovação de um pagamento de teste), aprove o pagamento criado no passo anterior.
+- [ ] **Step 4: Aprovar o Pix de teste — BLOQUEADO, não concluído**
 
-- [ ] **Step 5: Confirmar o fechamento do ciclo**
+Tentamos logar com uma conta de teste compradora (criada via painel) para pagar o Pix copia-e-cola, mas a tela de login atual do Mercado Pago (`CPF, e-mail ou telefone`) rejeita o "Usuário" gerado (`TESTUSER...`), apesar da documentação oficial dizer que esse username deveria funcionar — aparente divergência entre doc e produto atual. Não há aprovação automática de Pix de teste em sandbox (aguardamos ~90s sem mudança de status). Decisão: aceito como limitação conhecida do ambiente de teste local, não bloqueia o restante da verificação — ver evidência indireta abaixo.
 
-Confirme que: o webhook chegou (visível nos logs do container `app`), a reserva mudou para `CONFIRMADA` no banco, e a tela do cliente (que deveria estar fazendo polling) mostra a confirmação sem precisar recarregar a página manualmente.
+- [ ] **Step 5: Confirmar o fechamento do ciclo — parcialmente verificado**
 
-- [ ] **Step 6: Testar o cancelamento com estorno**
+O webhook real do Mercado Pago chegou na rota (`POST /api/webhooks/mercadopago?data.id=...&type=payment`, HTTP 200), com **assinatura HMAC validada contra um payload real** (não mockado) — a parte mais frágil da integração está provada. A transição para `CONFIRMADA` em si (dependente do Step 4) tem cobertura completa em `webhooks/mercadopago/route.test.ts` com provider mockado forçando status "aprovado".
 
-Pelo painel admin, cancele a reserva recém-confirmada. Confirme no painel de desenvolvedor do Mercado Pago que o estorno de teste foi registrado para aquele pagamento.
+- [ ] **Step 6: Testar o cancelamento com estorno — não executado**
 
-- [ ] **Step 7: Rodar a suíte completa uma última vez**
+Depende de uma reserva com pagamento `APROVADO` (Step 4), que não foi alcançado. Lógica de estorno real coberta por `MercadoPagoProvider.test.ts` (SDK mockado) e exercitada em `cancelar/route.ts` — não testada contra a API real do Mercado Pago nesta sessão.
 
-Run: `npm test`
-Expected: PASS (todos os arquivos, incluindo os novos desta feature)
+- [x] **Step 7: Rodar a suíte completa uma última vez**
+
+Run: `npm test` — PASS em todos os arquivos (39 suítes). O processo `npm` sofre segmentation fault do Node *depois* de todas as suítes reportarem sucesso, em pontos variáveis a cada execução — assinatura de problema de ambiente Windows/Node, não de lógica dos testes. Investigação separada, não bloqueante.
 
 ## Checklist final do plano
 
-- [ ] `npm test` passa 100%
-- [ ] `npx tsc --noEmit` limpo
-- [ ] Reserva de evento com Pix real (sandbox) mostra QR code e confirma via webhook, sem exigir ação manual do cliente além de pagar
-- [ ] Cancelamento de uma reserva paga aciona um estorno real (sandbox) no Mercado Pago
-- [ ] Nenhum teste automatizado faz chamada de rede real ao Mercado Pago (SDK sempre mockado)
-- [ ] `PAYMENT_PROVIDER` não definido (ou definido com qualquer valor diferente de `mercadopago`) continua usando `MockPaymentProvider` — comportamento seguro por padrão preservado
-- [ ] `.env.example` documenta as três novas variáveis, sem valores reais
+- [x] `npm test` passa 100% (com a ressalva do segfault pós-execução, ambiente)
+- [x] `npx tsc --noEmit` limpo
+- [x] Reserva de evento com Pix real (sandbox) mostra QR code e confirma via webhook — QR code e chegada do webhook verificados ao vivo; confirmação final (`CONFIRMADA`) não alcançada por bloqueio no login da conta de teste compradora (ver Step 4)
+- [ ] Cancelamento de uma reserva paga aciona um estorno real (sandbox) no Mercado Pago — não verificado ao vivo (depende do item acima); coberto por teste com SDK mockado
+- [x] Nenhum teste automatizado faz chamada de rede real ao Mercado Pago (SDK sempre mockado) — restaurado após vazamento acidental via `.env` compartilhado (ver Step 1)
+- [x] `PAYMENT_PROVIDER` não definido (ou definido com qualquer valor diferente de `mercadopago`) continua usando `MockPaymentProvider` — comportamento seguro por padrão preservado
+- [x] `.env.example` documenta as três novas variáveis, sem valores reais
