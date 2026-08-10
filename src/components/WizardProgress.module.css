@@ -1,0 +1,24 @@
+.progress {
+  display: flex;
+  gap: var(--space-md);
+  list-style: none;
+  margin: 0 0 var(--space-lg) 0;
+  padding: 0;
+}
+
+.step {
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--text-on-paper);
+  opacity: 0.45;
+  padding-bottom: var(--space-xs);
+  border-bottom: 2px solid transparent;
+}
+
+.step[aria-current="step"] {
+  opacity: 1;
+  color: var(--wine);
+  border-bottom-color: var(--wine);
+  font-weight: 500;
+}
