@@ -130,6 +130,7 @@ model Pagamento {
   metodo          MetodoPagamentoEnum
   valor           Decimal             @db.Decimal(10, 2)
   status          StatusPagamento     @default(PENDENTE)
+  referenciaExterna String            @unique
   createdAt       DateTime            @default(now())
 }
 

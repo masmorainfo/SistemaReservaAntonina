@@ -28,6 +28,9 @@ services:
       NEXTAUTH_SECRET: dev_secret_change_in_production
       NEXTAUTH_URL: http://localhost:3000
       TZ: America/Sao_Paulo
+      PAYMENT_PROVIDER: ${PAYMENT_PROVIDER:-mock}
+      MERCADOPAGO_ACCESS_TOKEN: ${MERCADOPAGO_ACCESS_TOKEN:-}
+      MERCADOPAGO_WEBHOOK_SECRET: ${MERCADOPAGO_WEBHOOK_SECRET:-}
     depends_on:
       db:
         condition: service_healthy

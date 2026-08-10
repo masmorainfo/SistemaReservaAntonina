@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 
 interface Pacote {
   id: string;
@@ -10,6 +10,12 @@ interface Pacote {
 
 interface ReservaEventoWizardProps {
   pacotes: Pacote[];
+}
+
+interface DadosPix {
+  qrCode: string;
+  qrCodeBase64: string;
+  expiraEm: string;
 }
 
 type TipoEvento = "CORPORATIVO" | "ANIVERSARIO" | "JANTAR_RESERVADO" | "OUTRO";
@@ -33,8 +39,34 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
   const [precisaCienciaCdc, setPrecisaCienciaCdc] = useState(false);
   const [cienciaAceita, setCienciaAceita] = useState(false);
   const [metodo, setMetodo] = useState<"pix" | "cartao">("pix");
+  const [dadosPix, setDadosPix] = useState<DadosPix | null>(null);
+  const [aguardandoPix, setAguardandoPix] = useState(false);
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
+
+  useEffect(() => {
+    if (!aguardandoPix || !reservaId) return;
+
+    const intervalId = setInterval(async () => {
+      try {
+        const resposta = await fetch(`/api/eventos/reservas/${reservaId}`);
+        if (!resposta.ok) return;
+
+        const corpo = await resposta.json();
+        if (corpo.reserva?.status === "CONFIRMADA") {
+          setAguardandoPix(false);
+          setEtapa("confirmado");
+        } else if (corpo.reserva?.status === "CANCELADA") {
+          setAguardandoPix(false);
+          setErro("O tempo limite para conclusão do pagamento expirou.");
+        }
+      } catch {
+        // Ignora erros transitórios de rede no polling
+      }
+    }, 3000);
+
+    return () => clearInterval(intervalId);
+  }, [aguardandoPix, reservaId]);
 
   function calcularValorEstimado(pacote: Pacote): number {
     if (pacote.precoPessoa === null) return 0;
@@ -169,7 +201,12 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
         return;
       }
 
-      setEtapa("confirmado");
+      if (corpo.dadosPix) {
+        setDadosPix(corpo.dadosPix);
+        setAguardandoPix(true);
+      } else {
+        setEtapa("confirmado");
+      }
     } catch {
       setErro("não foi possível conectar ao servidor para confirmar o pagamento");
     } finally {
@@ -319,13 +356,36 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
             </label>
           )}
 
-          <button
-            type="button"
-            onClick={confirmarPagamento}
-            disabled={(precisaCienciaCdc && !cienciaAceita) || carregando}
-          >
-            Confirmar pagamento
-          </button>
+          {!dadosPix && (
+            <button
+              type="button"
+              onClick={confirmarPagamento}
+              disabled={(precisaCienciaCdc && !cienciaAceita) || carregando}
+            >
+              Confirmar pagamento
+            </button>
+          )}
+
+          {dadosPix && (
+            <div style={{ marginTop: "1rem" }}>
+              <h3>Escaneie o QR Code Pix</h3>
+              <img
+                src={`data:image/png;base64,${dadosPix.qrCodeBase64}`}
+                alt="QR Code Pix para pagamento"
+                style={{ width: "200px", height: "200px" }}
+              />
+              <p style={{ marginTop: "0.5rem", wordBreak: "break-all" }}>
+                <strong>Cópia e cola Pix:</strong>
+                <br />
+                <code>{dadosPix.qrCode}</code>
+              </p>
+              {aguardandoPix && (
+                <p role="status">
+                  Aguardando confirmação do pagamento... (não feche esta página)
+                </p>
+              )}
+            </div>
+          )}
         </fieldset>
       )}
     </div>

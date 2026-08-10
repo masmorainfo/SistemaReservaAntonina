@@ -25,7 +25,7 @@ describe("MockPaymentProvider", () => {
   it("valida webhook e devolve a referência contida no payload", async () => {
     const provider = new MockPaymentProvider();
     const resultado = await provider.validarWebhook(
-      { referenciaExterna: "mock_evt_1_123" },
+      { corpo: { referenciaExterna: "mock_evt_1_123" }, cabecalhoRequestId: "req-1", dataId: "mock_evt_1_123" },
       "assinatura-qualquer"
     );
 
@@ -37,7 +37,10 @@ describe("MockPaymentProvider", () => {
 
   it("usa referência placeholder quando o payload não tem o campo", async () => {
     const provider = new MockPaymentProvider();
-    const resultado = await provider.validarWebhook("payload-invalido", "assinatura");
+    const resultado = await provider.validarWebhook(
+      { corpo: "payload-invalido", cabecalhoRequestId: "", dataId: "" },
+      "assinatura"
+    );
 
     expect(resultado.referenciaExterna).toBe("mock_referencia_desconhecida");
     expect(resultado.status).toBe("aprovado");
@@ -85,7 +88,9 @@ describe("MockPaymentProvider", () => {
     it("recusa também webhook, consulta e estorno", async () => {
       const provider = new MockPaymentProvider("recusado");
 
-      expect((await provider.validarWebhook({}, "assinatura")).status).toBe("recusado");
+      expect(
+        (await provider.validarWebhook({ corpo: {}, cabecalhoRequestId: "", dataId: "" }, "assinatura")).status
+      ).toBe("recusado");
       expect((await provider.consultarStatus("ref")).status).toBe("recusado");
       expect((await provider.estornar("ref", 10)).status).toBe("recusado");
     });
