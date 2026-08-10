@@ -1,6 +1,8 @@
 import Link from "next/link";
 import styles from "./Footer.module.css";
 
+const CARDAPIO_URL = "https://cardapio.pedyun.com.br/antoninaosteria";
+
 export function Footer() {
   return (
     <footer id="contato" className={styles.footer}>
@@ -21,6 +23,14 @@ export function Footer() {
           <p className={styles.rotulo}>Reservar</p>
           <Link href="/reservar-mesa">Reservar Mesa</Link>
           <Link href="/reservar-evento">Reservar Evento</Link>
+        </div>
+
+        <div className={styles.bloco}>
+          <p className={styles.rotulo}>Navegar</p>
+          <a href={CARDAPIO_URL} target="_blank" rel="noopener noreferrer">
+            Cardápio
+          </a>
+          <Link href="/#eventos">Eventos</Link>
         </div>
 
         <div className={styles.bloco}>

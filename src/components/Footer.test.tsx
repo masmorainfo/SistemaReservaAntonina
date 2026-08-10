@@ -29,4 +29,23 @@ describe("Footer", () => {
       "/reservar-evento"
     );
   });
+
+  it("linka o Cardápio externo, garantindo acesso em telas mobile onde o nav some", () => {
+    render(<Footer />);
+    const link = screen.getByRole("link", { name: "Cardápio" });
+    expect(link).toHaveAttribute(
+      "href",
+      "https://cardapio.pedyun.com.br/antoninaosteria"
+    );
+    expect(link).toHaveAttribute("target", "_blank");
+    expect(link).toHaveAttribute("rel", "noopener noreferrer");
+  });
+
+  it("linka a seção de Eventos, garantindo acesso em telas mobile onde o nav some", () => {
+    render(<Footer />);
+    expect(screen.getByRole("link", { name: "Eventos" })).toHaveAttribute(
+      "href",
+      "/#eventos"
+    );
+  });
 });
