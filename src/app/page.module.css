@@ -1,0 +1,140 @@
+.hero {
+  position: relative;
+  min-height: 70vh;
+  display: flex;
+  align-items: flex-end;
+  color: var(--text-cream);
+}
+
+.heroImagem {
+  object-fit: cover;
+  z-index: -2;
+}
+
+.heroOverlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(28, 26, 29, 0.35) 0%, rgba(28, 26, 29, 0.9) 100%);
+  z-index: -1;
+}
+
+.heroConteudo {
+  padding-bottom: var(--space-xl);
+}
+
+.heroTitulo {
+  font-size: clamp(2.5rem, 2rem + 3vw, 4rem);
+  letter-spacing: 0.03em;
+}
+
+.heroTagline {
+  font-family: var(--font-display);
+  font-style: italic;
+  color: var(--gold-accent);
+  font-size: 1.1rem;
+  margin: var(--space-sm) 0 var(--space-sm);
+}
+
+.heroSubtexto {
+  max-width: 40ch;
+  opacity: 0.9;
+}
+
+.secaoPapel {
+  padding: var(--space-section) var(--space-md);
+}
+
+.textoLongo {
+  max-width: 65ch;
+  font-size: 1.05rem;
+}
+
+.gradePratos {
+  display: grid;
+  gap: var(--space-md);
+  grid-template-columns: 1fr;
+  margin: var(--space-lg) 0;
+}
+
+.gradeGaleria {
+  display: grid;
+  gap: var(--space-sm);
+  grid-template-columns: repeat(2, 1fr);
+  margin: var(--space-lg) 0;
+}
+
+.fotoGaleria {
+  width: 100%;
+  height: 220px;
+  object-fit: cover;
+}
+
+.linkCardapio,
+.linkTour {
+  display: inline-block;
+  color: var(--wine);
+  font-weight: 500;
+  text-decoration: underline;
+}
+
+.secaoEscura {
+  background: var(--bg-dark);
+  color: var(--text-cream);
+  padding: var(--space-section) var(--space-md);
+  text-align: center;
+}
+
+.tituloEscuro {
+  color: var(--text-cream);
+  margin-bottom: var(--space-md);
+}
+
+.textoEscuro {
+  max-width: 55ch;
+  margin: 0 auto var(--space-xs);
+  opacity: 0.9;
+}
+
+.ctaFinal {
+  display: flex;
+  gap: var(--space-md);
+  justify-content: center;
+  margin-top: var(--space-lg);
+  flex-wrap: wrap;
+}
+
+.botaoDourado,
+.botaoContorno {
+  display: inline-block;
+  padding: 0.75rem 1.75rem;
+  text-decoration: none;
+  font-size: 0.9rem;
+  letter-spacing: 0.04em;
+}
+
+.botaoDourado {
+  background: var(--gold-accent);
+  color: var(--bg-dark);
+  font-weight: 600;
+}
+
+.botaoContorno {
+  border: 1px solid var(--gold-accent);
+  color: var(--text-cream);
+}
+
+@media (min-width: 768px) {
+  .gradePratos {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .gradeGaleria {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .gradePratos {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
