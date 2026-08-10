@@ -1,6 +1,8 @@
 "use client";
 
 import { useState, useEffect } from "react";
+import { WizardProgress, type WizardStep } from "@/components/WizardProgress";
+import styles from "./ReservaEventoWizard.module.css";
 
 interface Pacote {
   id: string;
@@ -22,6 +24,12 @@ type TipoEvento = "CORPORATIVO" | "ANIVERSARIO" | "JANTAR_RESERVADO" | "OUTRO";
 type Etapa = "quando" | "pacote" | "orcamento" | "orcamentoEnviado" | "checkout" | "confirmado";
 
 const VALOR_TELAO_PROJETOR = 500;
+
+const PASSOS: WizardStep[] = [
+  { key: "quando", label: "Quando" },
+  { key: "pacote", label: "Pacote" },
+  { key: "checkout", label: "Checkout" },
+];
 
 export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
   const [etapa, setEtapa] = useState<Etapa>("quando");
@@ -215,30 +223,42 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
   }
 
   if (etapa === "orcamentoEnviado") {
-    return <p role="status">Pedido de orçamento enviado! Nossa equipe entrará em contato em breve.</p>;
-  }
-
-  if (etapa === "confirmado") {
     return (
-      <p role="status">
-        Evento confirmado para {clienteNome} em {data}. Em breve você recebe o link para escolher os pratos do
-        cardápio.
+      <p role="status" className={styles.mensagemSucesso}>
+        Pedido de orçamento enviado! Nossa equipe entrará em contato em breve.
       </p>
     );
   }
 
+  if (etapa === "confirmado") {
+    return (
+      <p role="status" className={styles.mensagemSucesso}>
+        Evento confirmado para {clienteNome} em {data}. Em breve você recebe o link para escolher
+        os pratos do cardápio.
+      </p>
+    );
+  }
+
+  const mostraProgresso = etapa === "quando" || etapa === "pacote" || etapa === "checkout";
+
   return (
-    <div>
-      {erro && <p role="alert">{erro}</p>}
+    <div className={styles.wizard}>
+      {mostraProgresso && <WizardProgress steps={PASSOS} currentKey={etapa} />}
+
+      {erro && (
+        <p role="alert" className={styles.mensagemErro}>
+          {erro}
+        </p>
+      )}
 
       {etapa === "quando" && (
-        <fieldset>
+        <fieldset className={styles.fieldset}>
           <legend>Sobre o seu evento</legend>
-          <label>
+          <label className={styles.campo}>
             Data
             <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
           </label>
-          <label>
+          <label className={styles.campo}>
             Tipo de evento
             <select value={tipoEvento} onChange={(e) => setTipoEvento(e.target.value as TipoEvento)}>
               <option value="CORPORATIVO">Corporativo</option>
@@ -247,7 +267,7 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
               <option value="OUTRO">Outro</option>
             </select>
           </label>
-          <label>
+          <label className={styles.campo}>
             Número de convidados (até 40)
             <input
               type="number"
@@ -257,20 +277,21 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
               onChange={(e) => setNumConvidados(Number(e.target.value))}
             />
           </label>
-          <label>
+          <label className={styles.campo}>
             Nome
             <input value={clienteNome} onChange={(e) => setClienteNome(e.target.value)} />
           </label>
-          <label>
+          <label className={styles.campo}>
             Telefone
             <input value={clienteTelefone} onChange={(e) => setClienteTelefone(e.target.value)} />
           </label>
-          <label>
+          <label className={styles.campo}>
             E-mail
             <input type="email" value={clienteEmail} onChange={(e) => setClienteEmail(e.target.value)} />
           </label>
           <button
             type="button"
+            className={styles.botaoPrimario}
             onClick={verificarDisponibilidade}
             disabled={
               !data || !clienteNome.trim() || !clienteTelefone.trim() || !clienteEmail.trim() || carregando
@@ -282,10 +303,10 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
       )}
 
       {etapa === "pacote" && (
-        <fieldset>
+        <fieldset className={styles.fieldset}>
           <legend>Escolha o pacote</legend>
           {pacotes.map((pacote) => (
-            <label key={pacote.id}>
+            <label key={pacote.id} className={styles.opcaoPacote}>
               <input
                 type="radio"
                 name="pacote"
@@ -301,7 +322,7 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
                 : " — orçamento sob consulta"}
             </label>
           ))}
-          <label>
+          <label className={styles.opcaoPacote}>
             <input
               type="checkbox"
               checked={equipamentoTelao}
@@ -309,31 +330,41 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
             />
             Telão &amp; Projetor (+R$ 500,00)
           </label>
-          <button type="button" onClick={escolherPacote} disabled={!pacoteId || carregando}>
+          <button
+            type="button"
+            className={styles.botaoPrimario}
+            onClick={escolherPacote}
+            disabled={!pacoteId || carregando}
+          >
             {cardapioAberto ? "Solicitar orçamento" : "Continuar para pagamento"}
           </button>
         </fieldset>
       )}
 
       {etapa === "orcamento" && (
-        <fieldset>
+        <fieldset className={styles.fieldset}>
           <legend>Pedido de orçamento — Cardápio Aberto</legend>
           <p>Sua data, tipo de evento e número de convidados já foram registrados. Confirme o envio:</p>
-          <button type="button" onClick={enviarPedidoOrcamento} disabled={carregando}>
+          <button
+            type="button"
+            className={styles.botaoPrimario}
+            onClick={enviarPedidoOrcamento}
+            disabled={carregando}
+          >
             Enviar pedido de orçamento
           </button>
         </fieldset>
       )}
 
       {etapa === "checkout" && (
-        <fieldset>
+        <fieldset className={styles.fieldset}>
           <legend>Pagamento</legend>
-          <p>Valor total: R$ {valorTotal.toFixed(2)}</p>
-          <label>
+          <p className={styles.valorTotal}>Valor total: R$ {valorTotal.toFixed(2)}</p>
+          <label className={styles.opcaoPacote}>
             <input type="radio" name="metodo" checked={metodo === "pix"} onChange={() => setMetodo("pix")} />
             Pix
           </label>
-          <label>
+          <label className={styles.opcaoPacote}>
             <input
               type="radio"
               name="metodo"
@@ -344,7 +375,7 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
           </label>
 
           {precisaCienciaCdc && (
-            <label>
+            <label className={styles.avisoCdc}>
               <input
                 type="checkbox"
                 checked={cienciaAceita}
@@ -359,6 +390,7 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
           {!dadosPix && (
             <button
               type="button"
+              className={styles.botaoPrimario}
               onClick={confirmarPagamento}
               disabled={(precisaCienciaCdc && !cienciaAceita) || carregando}
             >
@@ -367,20 +399,20 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
           )}
 
           {dadosPix && (
-            <div style={{ marginTop: "1rem" }}>
+            <div className={styles.blocoPix}>
               <h3>Escaneie o QR Code Pix</h3>
               <img
                 src={`data:image/png;base64,${dadosPix.qrCodeBase64}`}
                 alt="QR Code Pix para pagamento"
-                style={{ width: "200px", height: "200px" }}
+                className={styles.qrCode}
               />
-              <p style={{ marginTop: "0.5rem", wordBreak: "break-all" }}>
+              <p className={styles.copiaCola}>
                 <strong>Cópia e cola Pix:</strong>
                 <br />
                 <code>{dadosPix.qrCode}</code>
               </p>
               {aguardandoPix && (
-                <p role="status">
+                <p role="status" className={styles.aguardandoPix}>
                   Aguardando confirmação do pagamento... (não feche esta página)
                 </p>
               )}

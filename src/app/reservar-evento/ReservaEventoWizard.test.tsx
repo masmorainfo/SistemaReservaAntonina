@@ -116,3 +116,11 @@ describe("ReservaEventoWizard", () => {
     expect(screen.getByRole("button", { name: "Confirmar pagamento" })).not.toBeDisabled();
   });
 });
+
+describe("ReservaEventoWizard — indicador de progresso", () => {
+  it("mostra 'Quando' como etapa atual ao carregar", () => {
+    render(<ReservaEventoWizard pacotes={[]} />);
+    const passoAtual = screen.getByText("Quando").closest("li");
+    expect(passoAtual).toHaveAttribute("aria-current", "step");
+  });
+});
