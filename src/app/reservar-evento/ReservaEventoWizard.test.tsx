@@ -35,8 +35,8 @@ describe("ReservaEventoWizard", () => {
     render(
       <ReservaEventoWizard
         pacotes={[
-          { id: "pac_1", nome: "Clássico", precoPessoa: 197 },
-          { id: "pac_2", nome: "Cardápio Aberto", precoPessoa: null },
+          { id: "pac_1", nome: "Clássico", precoPessoa: 197, taxaServicoPct: 10 },
+          { id: "pac_2", nome: "Cardápio Aberto", precoPessoa: null, taxaServicoPct: 10 },
         ]}
       />
     );
@@ -56,8 +56,8 @@ describe("ReservaEventoWizard", () => {
     render(
       <ReservaEventoWizard
         pacotes={[
-          { id: "pac_1", nome: "Clássico", precoPessoa: 197 },
-          { id: "pac_2", nome: "Cardápio Aberto", precoPessoa: null },
+          { id: "pac_1", nome: "Clássico", precoPessoa: 197, taxaServicoPct: 10 },
+          { id: "pac_2", nome: "Cardápio Aberto", precoPessoa: null, taxaServicoPct: 10 },
         ]}
       />
     );
@@ -100,7 +100,11 @@ describe("ReservaEventoWizard", () => {
       })
     );
 
-    render(<ReservaEventoWizard pacotes={[{ id: "pac_1", nome: "Clássico", precoPessoa: 197 }]} />);
+    render(
+      <ReservaEventoWizard
+        pacotes={[{ id: "pac_1", nome: "Clássico", precoPessoa: 197, taxaServicoPct: 10 }]}
+      />
+    );
 
     selecionarDataNoCalendario(daquiADias(7));
     fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Cliente Teste" } });
@@ -121,6 +125,42 @@ describe("ReservaEventoWizard", () => {
 
     expect(screen.queryByText(/direito de arrependimento/)).not.toBeInTheDocument();
     expect(screen.getByRole("button", { name: "Confirmar pagamento" })).not.toBeDisabled();
+  });
+
+  it("desabilita o add-on de Telão para o pacote Cardápio Aberto e mostra o total correto no modal para um pacote com preço", async () => {
+    render(
+      <ReservaEventoWizard
+        pacotes={[
+          { id: "pac_1", nome: "Clássico", precoPessoa: 200, taxaServicoPct: 10 },
+          { id: "pac_2", nome: "Cardápio Aberto", precoPessoa: null, taxaServicoPct: 10 },
+        ]}
+      />
+    );
+
+    selecionarDataNoCalendario(daquiADias(10));
+    fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Cliente Teste" } });
+    fireEvent.change(screen.getByLabelText("Telefone"), { target: { value: "+5541999999999" } });
+    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "teste@exemplo.com" } });
+    fireEvent.click(screen.getByText("Verificar disponibilidade"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Escolha o pacote")).toBeInTheDocument();
+    });
+
+    const checkboxTelao = screen.getByRole("checkbox", { name: /Telão/ });
+    expect(checkboxTelao).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("radio", { name: /Cardápio Aberto/ }));
+    expect(checkboxTelao).toBeDisabled();
+
+    fireEvent.click(screen.getByRole("radio", { name: /Clássico/ }));
+    expect(checkboxTelao).not.toBeDisabled();
+
+    fireEvent.click(checkboxTelao);
+
+    expect(await screen.findByRole("dialog")).toBeInTheDocument();
+    expect(screen.getByText("Clássico — R$ 2200.00")).toBeInTheDocument();
+    expect(screen.getByText("Total: R$ 2700.00")).toBeInTheDocument();
   });
 });
 

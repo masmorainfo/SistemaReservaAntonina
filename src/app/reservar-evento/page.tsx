@@ -18,6 +18,7 @@ export default async function ReservarEventoPage() {
               id: p.id,
               nome: p.nome,
               precoPessoa: p.precoPessoa === null ? null : Number(p.precoPessoa),
+              taxaServicoPct: Number(p.taxaServicoPct),
             }))}
           />
         </div>

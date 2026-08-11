@@ -4,12 +4,14 @@ import { useState, useEffect } from "react";
 import { WizardProgress, type WizardStep } from "@/components/WizardProgress";
 import { EventAvailabilityCalendar } from "@/components/EventAvailabilityCalendar";
 import { AddonConfirmModal } from "@/components/AddonConfirmModal";
+import { calcularValorTotalEvento, VALOR_TELAO_PROJETOR } from "@/lib/domain/eventPricing";
 import styles from "./ReservaEventoWizard.module.css";
 
 interface Pacote {
   id: string;
   nome: string;
   precoPessoa: number | null;
+  taxaServicoPct: number;
 }
 
 interface ReservaEventoWizardProps {
@@ -24,8 +26,6 @@ interface DadosPix {
 
 type TipoEvento = "CORPORATIVO" | "ANIVERSARIO" | "JANTAR_RESERVADO" | "OUTRO";
 type Etapa = "quando" | "pacote" | "orcamento" | "orcamentoEnviado" | "checkout" | "confirmado";
-
-const VALOR_TELAO_PROJETOR = 500;
 
 const PASSOS: WizardStep[] = [
   { key: "quando", label: "Quando" },
@@ -81,8 +81,12 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
 
   function calcularValorEstimado(pacote: Pacote): number {
     if (pacote.precoPessoa === null) return 0;
-    const subtotal = pacote.precoPessoa * numConvidados * 1.1;
-    return Math.round((subtotal + (equipamentoTelao ? VALOR_TELAO_PROJETOR : 0)) * 100) / 100;
+    return calcularValorTotalEvento({
+      precoPessoa: pacote.precoPessoa,
+      numConvidados,
+      taxaServicoPct: pacote.taxaServicoPct,
+      equipamentoTelao,
+    });
   }
 
   async function verificarDisponibilidade() {
@@ -243,6 +247,17 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
   }
 
   const mostraProgresso = etapa === "quando" || etapa === "pacote" || etapa === "checkout";
+  const pacoteSelecionado = pacotes.find((pacote) => pacote.id === pacoteId);
+  const addonDisponivel = pacoteSelecionado !== undefined && pacoteSelecionado.precoPessoa !== null;
+  const valorBaseAddon =
+    pacoteSelecionado && pacoteSelecionado.precoPessoa !== null
+      ? calcularValorTotalEvento({
+          precoPessoa: pacoteSelecionado.precoPessoa,
+          numConvidados,
+          taxaServicoPct: pacoteSelecionado.taxaServicoPct,
+          equipamentoTelao: false,
+        })
+      : 0;
 
   return (
     <div className={styles.wizard}>
@@ -257,8 +272,8 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
       {etapa === "quando" && (
         <fieldset className={styles.fieldset}>
           <legend>Sobre o seu evento</legend>
-          <div className={styles.campo}>
-            <span>Data</span>
+          <div className={styles.campo} role="group" aria-labelledby="rotulo-data-evento">
+            <span id="rotulo-data-evento">Data</span>
             <EventAvailabilityCalendar value={data} onChange={setData} />
           </div>
           <label className={styles.campo}>
@@ -329,6 +344,7 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
             <input
               type="checkbox"
               checked={equipamentoTelao}
+              disabled={!addonDisponivel}
               onChange={(e) => {
                 if (e.target.checked) {
                   setModalAddonAberto(true);
@@ -350,15 +366,8 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
 
           <AddonConfirmModal
             open={modalAddonAberto}
-            pacoteNome={pacotes.find((pacote) => pacote.id === pacoteId)?.nome ?? ""}
-            valorBase={
-              pacotes.find((pacote) => pacote.id === pacoteId)?.precoPessoa !== null &&
-              pacotes.find((pacote) => pacote.id === pacoteId)?.precoPessoa !== undefined
-                ? (pacotes.find((pacote) => pacote.id === pacoteId)!.precoPessoa as number) *
-                  numConvidados *
-                  1.1
-                : 0
-            }
+            pacoteNome={pacoteSelecionado?.nome ?? ""}
+            valorBase={valorBaseAddon}
             valorAddon={VALOR_TELAO_PROJETOR}
             onConfirm={() => {
               setEquipamentoTelao(true);

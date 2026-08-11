@@ -246,7 +246,7 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
               })}
           </div>
 
-          <p>Lista de mesas disponíveis (alternativa acessível ao mapa):</p>
+          <p>Lista de mesas (alternativa acessível ao mapa):</p>
           <ul className={styles.listaMesas}>
             {mesasDisponiveis.map((mesa) => {
               const ocupada = mesa.faixa === "ocupada";

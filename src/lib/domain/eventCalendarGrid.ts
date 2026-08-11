@@ -45,10 +45,10 @@ export function construirGradeDoMes(params: {
     let estado: EstadoDia;
     if (dataDate.getTime() < hojeSemHora.getTime()) {
       estado = "passado";
-    } else if (dataIso === dataSelecionada) {
-      estado = "selecionado";
     } else if (datasOcupadas.includes(dataIso)) {
       estado = "ocupado";
+    } else if (dataIso === dataSelecionada) {
+      estado = "selecionado";
     } else {
       estado = "disponivel";
     }

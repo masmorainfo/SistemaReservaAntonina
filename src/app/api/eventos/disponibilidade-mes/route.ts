@@ -37,6 +37,13 @@ export async function GET(request: NextRequest) {
 
   const datasOcupadas = reservasNoMes.map((reserva) => {
     const d = reserva.data;
+    // Prisma serializa campos @db.Date usando os componentes de data LOCAIS
+    // no momento da escrita (ver src/app/api/eventos/reservas/route.ts, que
+    // constrói a data via `new Date(`${body.data}T00:00:00`)`), mas devolve o
+    // valor lido como meia-noite UTC. Extrair com getUTC*() aqui é o que
+    // recupera o Y-M-D original — getters locais deslocariam a data em 1 dia
+    // neste fuso (America/Sao_Paulo, UTC-3). Verificado empiricamente contra
+    // o banco de teste real.
     const anoStr = d.getUTCFullYear();
     const mesStr = String(d.getUTCMonth() + 1).padStart(2, "0");
     const diaStr = String(d.getUTCDate()).padStart(2, "0");

@@ -47,12 +47,13 @@ export function AddonConfirmModal({
     <dialog
       ref={dialogRef}
       className={styles.dialogo}
+      aria-labelledby="addon-confirm-modal-titulo"
       onCancel={(e) => {
         e.preventDefault();
         onCancel();
       }}
     >
-      <h3 className={styles.titulo}>Confirmar Telão &amp; Projetor</h3>
+      <h3 id="addon-confirm-modal-titulo" className={styles.titulo}>Confirmar Telão &amp; Projetor</h3>
       <p>
         {pacoteNome} — R$ {valorBase.toFixed(2)}
       </p>

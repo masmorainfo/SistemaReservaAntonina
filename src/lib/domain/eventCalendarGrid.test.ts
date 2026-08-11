@@ -89,6 +89,20 @@ describe("construirGradeDoMes", () => {
     const dia22 = grade.find((celula) => celula?.diaDoMes === 22);
     expect(dia22?.estado).toBe("selecionado");
   });
+
+  it("marca uma data ocupada como 'ocupado' mesmo se ela também for a data selecionada", () => {
+    const hoje = new Date(2027, 8, 1);
+    const grade = construirGradeDoMes({
+      ano: 2027,
+      mes: 9,
+      hoje,
+      datasOcupadas: ["2027-09-22"],
+      dataSelecionada: "2027-09-22",
+    });
+
+    const dia22 = grade.find((celula) => celula?.diaDoMes === 22);
+    expect(dia22?.estado).toBe("ocupado");
+  });
 });
 
 describe("NOMES_MESES", () => {
