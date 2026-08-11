@@ -35,4 +35,33 @@ describe("GET /api/mesas-disponiveis", () => {
     expect(body.mesas).toHaveLength(1);
     expect(body.mesas[0].numero).toBe("R01");
   });
+
+  it("inclui mesas ocupadas na resposta, marcadas com faixa 'ocupada'", async () => {
+    const mesaOcupada = await prisma.mesa.create({
+      data: { ambienteId, numero: "R02", capacidadeLugares: 4 },
+    });
+    await prisma.reservaMesa.create({
+      data: {
+        mesaId: mesaOcupada.id,
+        nomeCliente: "Cliente Ocupado",
+        telefone: "+5541999999998",
+        data: new Date(`${data}T00:00:00`),
+        horarioChegada: "19:30",
+        numPessoas: 2,
+        status: "CONFIRMADA",
+      },
+    });
+
+    const params = new URLSearchParams({ ambienteId, data, numPessoas: "2" });
+    const request = new NextRequest(`http://localhost/api/mesas-disponiveis?${params}`);
+    const response = await GET(request);
+    const body = await response.json();
+
+    expect(response.status).toBe(200);
+    const mesaR02 = body.mesas.find((m: { numero: string }) => m.numero === "R02");
+    expect(mesaR02.faixa).toBe("ocupada");
+
+    await prisma.reservaMesa.deleteMany({ where: { mesaId: mesaOcupada.id } });
+    await prisma.mesa.delete({ where: { id: mesaOcupada.id } });
+  });
 });

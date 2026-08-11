@@ -43,10 +43,15 @@ describe("buscarMesasDisponiveis", () => {
     await prisma.ambiente.delete({ where: { id: ambienteId } });
   });
 
-  it("retorna só a mesa livre, excluindo a já reservada na data", async () => {
+  it("retorna a mesa livre como disponível e a reservada como ocupada", async () => {
     const resultado = await buscarMesasDisponiveis({ ambienteId, data, numPessoas: 2 });
-    expect(resultado).toHaveLength(1);
-    expect(resultado[0].numero).toBe("T01");
+    expect(resultado).toHaveLength(2);
+
+    const livre = resultado.find((mesa) => mesa.numero === "T01");
+    const reservada = resultado.find((mesa) => mesa.numero === "T02");
+
+    expect(livre?.faixa).not.toBe("ocupada");
+    expect(reservada?.faixa).toBe("ocupada");
   });
 
   it("retorna vazio quando nenhuma mesa comporta o grupo", async () => {
@@ -109,5 +114,29 @@ describe("buscarMesasDisponiveis - filtro por diasSemanaAtivos (mesas duplas do 
     expect(resultado).toHaveLength(1);
     expect(resultado[0].id).toBe(mesaSextaSabadoId);
     expect(resultado[0].numero).toBe("11");
+  });
+
+  it("mesa reservada na terça não aparece ocupada ao consultar o mesmo número de mesa num sábado (registro diferente)", async () => {
+    await prisma.reservaMesa.create({
+      data: {
+        mesaId: mesaDomingoQuintaId,
+        nomeCliente: "Cliente Teste Deck",
+        telefone: "+5541999999999",
+        data: terca,
+        horarioChegada: "19:00",
+        numPessoas: 2,
+        status: "CONFIRMADA",
+      },
+    });
+
+    const resultadoTerca = await buscarMesasDisponiveis({ ambienteId, data: terca, numPessoas: 2 });
+    expect(resultadoTerca).toHaveLength(1);
+    expect(resultadoTerca[0].faixa).toBe("ocupada");
+    expect(resultadoTerca[0].id).toBe(mesaDomingoQuintaId);
+
+    const resultadoSabado = await buscarMesasDisponiveis({ ambienteId, data: sabado, numPessoas: 2 });
+    expect(resultadoSabado).toHaveLength(1);
+    expect(resultadoSabado[0].faixa).not.toBe("ocupada");
+    expect(resultadoSabado[0].id).toBe(mesaSextaSabadoId);
   });
 });

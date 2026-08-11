@@ -6,7 +6,7 @@ export interface MesaCandidata {
 }
 
 export interface MesaClassificada extends MesaCandidata {
-  faixa: "ideal" | "alternativa";
+  faixa: "ideal" | "alternativa" | "ocupada";
 }
 
 export function classificarMesasPorCapacidade(
