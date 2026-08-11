@@ -57,8 +57,10 @@ model Mesa {
   posicaoTour       String?
   ativa             Boolean       @default(true)
   // Dias da semana em que este registro de Mesa está ativo (0=domingo .. 6=sábado).
-  // Usado pelas mesas duplas do Deck (11, 12, 21): um conjunto de registros para
-  // domingo-quinta e outro para sexta/sábado, nunca ativos ao mesmo tempo.
+  // Usado pelas mesas do Deck que mudam de configuração por dia: o mesmo número
+  // pode ter mais de um registro (ex.: mesa "11" é 4 lugares terça-quinta+domingo
+  // e 2 lugares sexta/sábado), cada um ativo em dias mutuamente exclusivos. Ver
+  // docs/superpowers/specs/2026-08-11-mapa-2d-mesas-design.md pro inventário completo.
   diasSemanaAtivos  Int[]         @default([0, 1, 2, 3, 4, 5, 6])
   ambiente          Ambiente      @relation(fields: [ambienteId], references: [id])
   ambienteId        String
