@@ -24,6 +24,11 @@ const PASSOS: WizardStep[] = [
   { key: "dados", label: "Dados" },
 ];
 
+const IMAGEM_MAPA_POR_AMBIENTE: Record<string, string> = {
+  Deck: "/images/mapa-deck.svg",
+  "Salão Principal": "/images/mapa-salao-principal.svg",
+};
+
 export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWizardProps) {
   const [etapa, setEtapa] = useState<Etapa>("quando");
   const [data, setData] = useState("");
@@ -37,6 +42,11 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
   const [telefone, setTelefone] = useState("");
   const [erro, setErro] = useState("");
   const [carregando, setCarregando] = useState(false);
+
+  const ambienteSelecionado = ambientes.find((a) => a.id === ambienteSelecionadoId);
+  const imagemMapa = ambienteSelecionado
+    ? IMAGEM_MAPA_POR_AMBIENTE[ambienteSelecionado.nome]
+    : undefined;
 
   async function buscarHorarios() {
     setErro("");
@@ -217,8 +227,9 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
           </div>
 
           <div
-            aria-label={`Mapa do ambiente ${ambientes.find((a) => a.id === ambienteSelecionadoId)?.nome ?? ""}`}
+            aria-label={`Mapa do ambiente ${ambienteSelecionado?.nome ?? ""}`}
             className={styles.mapa}
+            style={imagemMapa ? { backgroundImage: `url(${imagemMapa})` } : undefined}
           >
             {zonasPorAmbiente[ambienteSelecionadoId]
               ?.filter((zona) => mesasDisponiveis.some((mesa) => mesa.id === zona.mesaId))

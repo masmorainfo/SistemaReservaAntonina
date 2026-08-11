@@ -78,6 +78,50 @@ describe("ReservaMesaWizard", () => {
 
     expect(screen.getByText("Continuar")).toBeDisabled();
   });
+
+  it("aplica a imagem de fundo do mapa conforme o ambiente selecionado", async () => {
+    vi.stubGlobal(
+      "fetch",
+      vi.fn(async (url: string) => {
+        if (url.toString().includes("/api/horarios-disponiveis")) {
+          return new Response(JSON.stringify({ horarios: ["18:30"] }), { status: 200 });
+        }
+        if (url.toString().includes("/api/mesas-disponiveis")) {
+          return new Response(JSON.stringify({ mesas: [] }), { status: 200 });
+        }
+        return new Response(JSON.stringify({ erro: "rota não mockada" }), { status: 404 });
+      })
+    );
+
+    render(
+      <ReservaMesaWizard
+        ambientes={[
+          { id: "amb_deck", nome: "Deck" },
+          { id: "amb_salao", nome: "Salão Principal" },
+        ]}
+        zonasPorAmbiente={{ amb_deck: [], amb_salao: [] }}
+      />
+    );
+
+    fireEvent.change(screen.getByLabelText("Data"), { target: { value: "2026-08-11" } });
+    fireEvent.click(screen.getByText("Ver horários"));
+    await waitFor(() => {
+      expect(screen.getByText("18:30")).toBeInTheDocument();
+    });
+
+    fireEvent.change(screen.getByLabelText("Horário"), { target: { value: "18:30" } });
+    fireEvent.click(screen.getByText("Escolher mesa"));
+
+    const mapaDeck = await screen.findByLabelText("Mapa do ambiente Deck");
+    expect(mapaDeck.style.backgroundImage).toBe('url("/images/mapa-deck.svg")');
+
+    fireEvent.click(screen.getByRole("button", { name: "Salão Principal" }));
+
+    await waitFor(() => {
+      const mapaSalao = screen.getByLabelText("Mapa do ambiente Salão Principal");
+      expect(mapaSalao.style.backgroundImage).toBe('url("/images/mapa-salao-principal.svg")');
+    });
+  });
 });
 
 describe("ReservaMesaWizard — indicador de progresso", () => {
