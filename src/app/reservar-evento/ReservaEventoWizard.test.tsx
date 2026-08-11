@@ -162,6 +162,51 @@ describe("ReservaEventoWizard", () => {
     expect(screen.getByText("Clássico — R$ 2200.00")).toBeInTheDocument();
     expect(screen.getByText("Total: R$ 2700.00")).toBeInTheDocument();
   });
+
+  it("não permite numConvidados sair do intervalo válido (1 a 40) via o campo numérico", () => {
+    render(<ReservaEventoWizard pacotes={[]} />);
+    const campoConvidados = screen.getByLabelText(/Número de convidados/);
+
+    fireEvent.change(campoConvidados, { target: { value: "0" } });
+    expect(campoConvidados).toHaveValue(1);
+
+    fireEvent.change(campoConvidados, { target: { value: "" } });
+    expect(campoConvidados).toHaveValue(1);
+
+    fireEvent.change(campoConvidados, { target: { value: "999" } });
+    expect(campoConvidados).toHaveValue(40);
+  });
+
+  it("reseta o add-on de Telão ao trocar de pacote", async () => {
+    render(
+      <ReservaEventoWizard
+        pacotes={[
+          { id: "pac_1", nome: "Clássico", precoPessoa: 200, taxaServicoPct: 10 },
+          { id: "pac_2", nome: "Executivo", precoPessoa: 150, taxaServicoPct: 10 },
+        ]}
+      />
+    );
+
+    selecionarDataNoCalendario(daquiADias(10));
+    fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Cliente Teste" } });
+    fireEvent.change(screen.getByLabelText("Telefone"), { target: { value: "+5541999999999" } });
+    fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "teste@exemplo.com" } });
+    fireEvent.click(screen.getByText("Verificar disponibilidade"));
+
+    await waitFor(() => {
+      expect(screen.getByText("Escolha o pacote")).toBeInTheDocument();
+    });
+
+    fireEvent.click(screen.getByRole("radio", { name: /Clássico/ }));
+    const checkboxTelao = screen.getByRole("checkbox", { name: /Telão/ });
+    fireEvent.click(checkboxTelao);
+    fireEvent.click(screen.getByRole("button", { name: "Confirmar" }));
+    expect(checkboxTelao).toBeChecked();
+
+    fireEvent.click(screen.getByRole("radio", { name: /Executivo/ }));
+    expect(checkboxTelao).not.toBeChecked();
+    expect(checkboxTelao).not.toBeDisabled();
+  });
 });
 
 describe("ReservaEventoWizard — indicador de progresso", () => {

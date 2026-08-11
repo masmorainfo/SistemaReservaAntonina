@@ -292,7 +292,10 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
               min={1}
               max={40}
               value={numConvidados}
-              onChange={(e) => setNumConvidados(Number(e.target.value))}
+              onChange={(e) => {
+                const valor = Number(e.target.value);
+                setNumConvidados(Number.isNaN(valor) ? 1 : Math.min(40, Math.max(1, valor)));
+              }}
             />
           </label>
           <label className={styles.campo}>
@@ -332,6 +335,7 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
                 onChange={() => {
                   setCardapioAberto(pacote.precoPessoa === null);
                   setPacoteId(pacote.id);
+                  setEquipamentoTelao(false);
                 }}
               />
               {pacote.nome}
