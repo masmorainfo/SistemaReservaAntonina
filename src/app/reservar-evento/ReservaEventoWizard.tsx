@@ -3,6 +3,7 @@
 import { useState, useEffect } from "react";
 import { WizardProgress, type WizardStep } from "@/components/WizardProgress";
 import { EventAvailabilityCalendar } from "@/components/EventAvailabilityCalendar";
+import { AddonConfirmModal } from "@/components/AddonConfirmModal";
 import styles from "./ReservaEventoWizard.module.css";
 
 interface Pacote {
@@ -40,6 +41,7 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
   const [pacoteId, setPacoteId] = useState("");
   const [cardapioAberto, setCardapioAberto] = useState(false);
   const [equipamentoTelao, setEquipamentoTelao] = useState(false);
+  const [modalAddonAberto, setModalAddonAberto] = useState(false);
   const [clienteNome, setClienteNome] = useState("");
   const [clienteTelefone, setClienteTelefone] = useState("");
   const [clienteEmail, setClienteEmail] = useState("");
@@ -327,7 +329,13 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
             <input
               type="checkbox"
               checked={equipamentoTelao}
-              onChange={(e) => setEquipamentoTelao(e.target.checked)}
+              onChange={(e) => {
+                if (e.target.checked) {
+                  setModalAddonAberto(true);
+                } else {
+                  setEquipamentoTelao(false);
+                }
+              }}
             />
             Telão &amp; Projetor (+R$ 500,00)
           </label>
@@ -339,6 +347,25 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
           >
             {cardapioAberto ? "Solicitar orçamento" : "Continuar para pagamento"}
           </button>
+
+          <AddonConfirmModal
+            open={modalAddonAberto}
+            pacoteNome={pacotes.find((pacote) => pacote.id === pacoteId)?.nome ?? ""}
+            valorBase={
+              pacotes.find((pacote) => pacote.id === pacoteId)?.precoPessoa !== null &&
+              pacotes.find((pacote) => pacote.id === pacoteId)?.precoPessoa !== undefined
+                ? (pacotes.find((pacote) => pacote.id === pacoteId)!.precoPessoa as number) *
+                  numConvidados *
+                  1.1
+                : 0
+            }
+            valorAddon={VALOR_TELAO_PROJETOR}
+            onConfirm={() => {
+              setEquipamentoTelao(true);
+              setModalAddonAberto(false);
+            }}
+            onCancel={() => setModalAddonAberto(false)}
+          />
         </fieldset>
       )}
 

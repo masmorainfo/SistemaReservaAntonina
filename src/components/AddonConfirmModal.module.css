@@ -1,0 +1,46 @@
+.dialogo {
+  border: 1px solid var(--paper-border);
+  padding: var(--space-lg);
+  max-width: 400px;
+  width: 90vw;
+}
+
+.dialogo::backdrop {
+  background: rgba(0, 0, 0, 0.5);
+}
+
+.titulo {
+  font-family: var(--font-display);
+  font-size: 1.1rem;
+  margin: 0 0 var(--space-md);
+}
+
+.total {
+  font-family: var(--font-display);
+  color: var(--wine);
+  font-size: 1.05rem;
+  margin-top: var(--space-sm);
+}
+
+.acoes {
+  display: flex;
+  gap: var(--space-sm);
+  margin-top: var(--space-lg);
+}
+
+.botaoCancelar {
+  flex: 1;
+  background: #fff;
+  border: 1px solid var(--paper-border);
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+}
+
+.botaoConfirmar {
+  flex: 1;
+  background: var(--wine);
+  color: var(--paper);
+  border: none;
+  padding: 0.6rem 1rem;
+  cursor: pointer;
+}
