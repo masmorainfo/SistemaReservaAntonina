@@ -15,8 +15,8 @@
     <line x1="20" y1="750" x2="1580" y2="750"/>
   </g>
 
-  <text x="290" y="270" font-size="18" fill="#8a5a3f" text-anchor="middle">lado esquerdo</text>
-  <text x="1310" y="270" font-size="18" fill="#8a5a3f" text-anchor="middle">lado direito</text>
+  <text x="290" y="270" font-size="22" fill="#8a5a3f" text-anchor="middle">lado esquerdo</text>
+  <text x="1310" y="270" font-size="22" fill="#8a5a3f" text-anchor="middle">lado direito</text>
 
   <!-- Plantas decorativas nos cantos -->
   <g fill="#6b8a5a" opacity="0.7">
@@ -28,7 +28,7 @@
 
   <!-- Corredor / entrada central -->
   <rect x="700" y="300" width="200" height="480" fill="none" stroke="#8a5a3f" stroke-width="2" stroke-dasharray="8 6"/>
-  <text x="800" y="470" font-size="18" fill="#8a5a3f" text-anchor="middle">portão / rua</text>
+  <text x="800" y="470" font-size="22" fill="#8a5a3f" text-anchor="middle">portão / rua</text>
   <rect x="760" y="740" width="80" height="14" fill="#c9a84c"/>
-  <text x="800" y="785" font-size="18" fill="#5c3a3f" text-anchor="middle">entrada</text>
+  <text x="800" y="785" font-size="22" fill="#5c3a3f" text-anchor="middle">entrada</text>
 </svg>

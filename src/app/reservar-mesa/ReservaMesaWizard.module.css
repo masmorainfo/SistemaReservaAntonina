@@ -94,10 +94,16 @@
 
 .mesaNoMapa {
   position: absolute;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 2px;
   background: rgba(92, 58, 63, 0.75);
   color: var(--paper);
   border: 1px solid var(--gold-accent);
-  font-size: 0.7rem;
+  font-size: 0.65rem;
+  line-height: 1.1;
   cursor: pointer;
 }
 

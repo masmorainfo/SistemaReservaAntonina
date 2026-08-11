@@ -93,6 +93,9 @@ async function main() {
   });
 
   // Placeholder de teste antigo, não corresponde a nenhuma mesa real do Deck.
+  // Apaga reservas órfãs de D01 antes: Mesa.reservas não tem onDelete: Cascade
+  // no schema, então deletar a mesa direto violaria a FK se alguma reserva
+  // de teste ainda apontar pra ela.
   const d01Mesas = await prisma.mesa.findMany({
     where: { ambienteId: deck.id, numero: "D01" },
   });

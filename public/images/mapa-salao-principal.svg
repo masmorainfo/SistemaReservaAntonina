@@ -6,8 +6,8 @@
 
   <!-- Adega -->
   <rect x="40" y="280" width="280" height="280" fill="none" stroke="#8a5a3f" stroke-width="2" stroke-dasharray="8 6"/>
-  <text x="55" y="305" font-size="20" fill="#8a5a3f">adega</text>
-  <text x="30" y="450" font-size="16" fill="#8a5a3f" transform="rotate(-90 30 450)">porta cozinha</text>
+  <text x="55" y="305" font-size="26" fill="#8a5a3f">adega</text>
+  <text x="30" y="450" font-size="20" fill="#8a5a3f" transform="rotate(-90 30 450)">porta cozinha</text>
   <g stroke="#8a5a3f" stroke-width="2">
     <line x1="60" y1="300" x2="60" y2="540"/>
     <line x1="75" y1="300" x2="75" y2="540"/>
@@ -15,7 +15,7 @@
   </g>
 
   <!-- Quadros -->
-  <text x="800" y="70" font-size="18" fill="#8a5a3f" text-anchor="middle">quadros ↑</text>
+  <text x="800" y="70" font-size="22" fill="#8a5a3f" text-anchor="middle">quadros ↑</text>
   <g fill="none" stroke="#c9a84c" stroke-width="3">
     <rect x="560" y="95" width="50" height="65"/>
     <rect x="775" y="95" width="50" height="65"/>
@@ -25,15 +25,15 @@
   <!-- Pilastras -->
   <rect x="680" y="200" width="24" height="480" fill="#8a5a3f"/>
   <rect x="920" y="200" width="24" height="480" fill="#8a5a3f"/>
-  <text x="692" y="195" font-size="14" fill="#8a5a3f" text-anchor="middle">pilastra</text>
-  <text x="932" y="195" font-size="14" fill="#8a5a3f" text-anchor="middle">pilastra</text>
+  <text x="692" y="195" font-size="18" fill="#8a5a3f" text-anchor="middle">pilastra</text>
+  <text x="932" y="195" font-size="18" fill="#8a5a3f" text-anchor="middle">pilastra</text>
 
   <!-- Bar -->
   <rect x="1250" y="180" width="300" height="560" fill="none" stroke="#8a5a3f" stroke-width="2" stroke-dasharray="8 6"/>
   <text x="1400" y="160" font-size="26" fill="#5c3a3f" font-weight="bold" text-anchor="middle">BAR</text>
-  <text x="1400" y="765" font-size="15" fill="#8a5a3f" text-anchor="middle">entrada por porta de vidro corrediça</text>
+  <text x="1400" y="765" font-size="18" fill="#8a5a3f" text-anchor="middle">entrada por porta de vidro corrediça</text>
 
   <!-- Entrada do salão -->
   <rect x="720" y="810" width="160" height="14" fill="#c9a84c"/>
-  <text x="800" y="855" font-size="18" fill="#5c3a3f" text-anchor="middle">entrada</text>
+  <text x="800" y="855" font-size="22" fill="#5c3a3f" text-anchor="middle">entrada</text>
 </svg>
