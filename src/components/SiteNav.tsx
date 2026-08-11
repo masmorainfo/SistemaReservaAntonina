@@ -14,8 +14,8 @@ export function SiteNav() {
           <a href={CARDAPIO_URL} target="_blank" rel="noopener noreferrer">
             Cardápio
           </a>
-          <a href="/#eventos">Eventos</a>
-          <a href="/#contato">Contato</a>
+          <Link href="/#eventos">Eventos</Link>
+          <Link href="/#contato">Contato</Link>
         </nav>
 
         <div className={styles.reservar} role="group" aria-label="Reservar">
