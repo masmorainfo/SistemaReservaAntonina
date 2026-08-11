@@ -121,3 +121,15 @@
   border-color: var(--wine);
   background: rgba(92, 58, 63, 0.08);
 }
+
+.mesaOcupada {
+  background: rgba(0, 0, 0, 0.15);
+  color: var(--text-on-paper);
+  border-color: var(--paper-border);
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.mesaOcupada:hover {
+  background: rgba(0, 0, 0, 0.15);
+}

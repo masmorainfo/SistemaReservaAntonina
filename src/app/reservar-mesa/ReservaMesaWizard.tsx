@@ -222,40 +222,50 @@ export function ReservaMesaWizard({ ambientes, zonasPorAmbiente }: ReservaMesaWi
           >
             {zonasPorAmbiente[ambienteSelecionadoId]
               ?.filter((zona) => mesasDisponiveis.some((mesa) => mesa.id === zona.mesaId))
-              .map((zona) => (
-                <button
-                  key={zona.mesaId}
-                  type="button"
-                  className={styles.mesaNoMapa}
-                  style={{
-                    left: `${zona.coordenadas.x}%`,
-                    top: `${zona.coordenadas.y}%`,
-                    width: `${zona.coordenadas.largura}%`,
-                    height: `${zona.coordenadas.altura}%`,
-                  }}
-                  aria-pressed={zona.mesaId === mesaSelecionadaId}
-                  onClick={() => setMesaSelecionadaId(zona.mesaId)}
-                >
-                  Mesa {zona.numero}
-                </button>
-              ))}
+              .map((zona) => {
+                const mesa = mesasDisponiveis.find((m) => m.id === zona.mesaId);
+                const ocupada = mesa?.faixa === "ocupada";
+                return (
+                  <button
+                    key={zona.mesaId}
+                    type="button"
+                    className={`${styles.mesaNoMapa} ${ocupada ? styles.mesaOcupada : ""}`}
+                    style={{
+                      left: `${zona.coordenadas.x}%`,
+                      top: `${zona.coordenadas.y}%`,
+                      width: `${zona.coordenadas.largura}%`,
+                      height: `${zona.coordenadas.altura}%`,
+                    }}
+                    aria-pressed={ocupada ? undefined : zona.mesaId === mesaSelecionadaId}
+                    disabled={ocupada}
+                    onClick={() => setMesaSelecionadaId(zona.mesaId)}
+                  >
+                    Mesa {zona.numero}
+                  </button>
+                );
+              })}
           </div>
 
           <p>Lista de mesas disponíveis (alternativa acessível ao mapa):</p>
           <ul className={styles.listaMesas}>
-            {mesasDisponiveis.map((mesa) => (
-              <li key={mesa.id}>
-                <button
-                  type="button"
-                  className={styles.botaoMesa}
-                  aria-pressed={mesa.id === mesaSelecionadaId}
-                  onClick={() => setMesaSelecionadaId(mesa.id)}
-                >
-                  Mesa {mesa.numero} — {mesa.capacidadeLugares} lugares
-                  {mesa.faixa === "alternativa" ? " (maior que o ideal para o grupo)" : ""}
-                </button>
-              </li>
-            ))}
+            {mesasDisponiveis.map((mesa) => {
+              const ocupada = mesa.faixa === "ocupada";
+              return (
+                <li key={mesa.id}>
+                  <button
+                    type="button"
+                    className={`${styles.botaoMesa} ${ocupada ? styles.mesaOcupada : ""}`}
+                    aria-pressed={ocupada ? undefined : mesa.id === mesaSelecionadaId}
+                    disabled={ocupada}
+                    onClick={() => setMesaSelecionadaId(mesa.id)}
+                  >
+                    Mesa {mesa.numero} — {mesa.capacidadeLugares} lugares
+                    {mesa.faixa === "alternativa" ? " (maior que o ideal para o grupo)" : ""}
+                    {ocupada ? " (ocupada)" : ""}
+                  </button>
+                </li>
+              );
+            })}
           </ul>
 
           <button
