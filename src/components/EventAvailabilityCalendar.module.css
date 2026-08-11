@@ -1,0 +1,79 @@
+.calendario {
+  border: 1px solid var(--paper-border);
+  padding: var(--space-md);
+  margin-bottom: var(--space-md);
+  background: #fff;
+}
+
+.cabecalho {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-sm);
+}
+
+.tituloMes {
+  font-family: var(--font-display);
+  font-size: 1rem;
+  text-transform: capitalize;
+}
+
+.botaoNavegacao {
+  background: none;
+  border: 1px solid var(--paper-border);
+  width: 2rem;
+  height: 2rem;
+  font-size: 1.1rem;
+  cursor: pointer;
+}
+
+.botaoNavegacao:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+.gradeDiasSemana,
+.gradeDias {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px;
+}
+
+.diaSemana {
+  text-align: center;
+  font-size: 0.75rem;
+  color: var(--text-on-paper);
+  opacity: 0.7;
+  padding: var(--space-xs) 0;
+}
+
+.diaVazio {
+  aspect-ratio: 1;
+}
+
+.diaBotao {
+  aspect-ratio: 1;
+  border: 1px solid var(--paper-border);
+  background: #fff;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.dia_passado,
+.dia_ocupado {
+  background: rgba(92, 58, 63, 0.08);
+  color: var(--text-on-paper);
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+.dia_disponivel:hover {
+  background: rgba(92, 58, 63, 0.08);
+}
+
+.dia_selecionado {
+  background: var(--wine);
+  color: var(--paper);
+  border-color: var(--wine);
+}

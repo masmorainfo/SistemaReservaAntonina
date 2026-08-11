@@ -2,6 +2,21 @@
 import { describe, it, expect, vi, beforeEach } from "vitest";
 import { render, screen, fireEvent, waitFor } from "@testing-library/react";
 import { ReservaEventoWizard } from "./ReservaEventoWizard";
+import { NOMES_MESES } from "@/lib/domain/eventCalendarGrid";
+import { daquiADias } from "@/test-utils/datas";
+
+function selecionarDataNoCalendario(dataAlvo: Date) {
+  const hoje = new Date();
+  const mesmoMes =
+    dataAlvo.getFullYear() === hoje.getFullYear() && dataAlvo.getMonth() === hoje.getMonth();
+  if (!mesmoMes) {
+    fireEvent.click(screen.getByLabelText("Próximo mês"));
+  }
+  const nomeMes = NOMES_MESES[dataAlvo.getMonth()];
+  fireEvent.click(
+    screen.getByRole("button", { name: `${dataAlvo.getDate()} de ${nomeMes}, disponível` })
+  );
+}
 
 describe("ReservaEventoWizard", () => {
   beforeEach(() => {
@@ -26,7 +41,7 @@ describe("ReservaEventoWizard", () => {
       />
     );
 
-    fireEvent.change(screen.getByLabelText("Data"), { target: { value: "2027-09-10" } });
+    selecionarDataNoCalendario(daquiADias(10));
     fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Cliente Teste" } });
     fireEvent.change(screen.getByLabelText("Telefone"), { target: { value: "+5541999999999" } });
     fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "teste@exemplo.com" } });
@@ -47,7 +62,7 @@ describe("ReservaEventoWizard", () => {
       />
     );
 
-    fireEvent.change(screen.getByLabelText("Data"), { target: { value: "2027-09-10" } });
+    selecionarDataNoCalendario(daquiADias(10));
     fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Cliente Teste" } });
     fireEvent.change(screen.getByLabelText("Telefone"), { target: { value: "+5541999999999" } });
     fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "teste@exemplo.com" } });
@@ -87,15 +102,7 @@ describe("ReservaEventoWizard", () => {
 
     render(<ReservaEventoWizard pacotes={[{ id: "pac_1", nome: "Clássico", precoPessoa: 197 }]} />);
 
-    const hoje = new Date();
-    const dataEvento = new Date(hoje);
-    dataEvento.setDate(hoje.getDate() + 7);
-    const ano = dataEvento.getFullYear();
-    const mes = (dataEvento.getMonth() + 1).toString().padStart(2, "0");
-    const dia = dataEvento.getDate().toString().padStart(2, "0");
-    const dataStr = `${ano}-${mes}-${dia}`;
-
-    fireEvent.change(screen.getByLabelText("Data"), { target: { value: dataStr } });
+    selecionarDataNoCalendario(daquiADias(7));
     fireEvent.change(screen.getByLabelText("Nome"), { target: { value: "Cliente Teste" } });
     fireEvent.change(screen.getByLabelText("Telefone"), { target: { value: "+5541999999999" } });
     fireEvent.change(screen.getByLabelText("E-mail"), { target: { value: "teste@exemplo.com" } });

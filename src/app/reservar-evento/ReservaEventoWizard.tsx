@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from "react";
 import { WizardProgress, type WizardStep } from "@/components/WizardProgress";
+import { EventAvailabilityCalendar } from "@/components/EventAvailabilityCalendar";
 import styles from "./ReservaEventoWizard.module.css";
 
 interface Pacote {
@@ -254,10 +255,10 @@ export function ReservaEventoWizard({ pacotes }: ReservaEventoWizardProps) {
       {etapa === "quando" && (
         <fieldset className={styles.fieldset}>
           <legend>Sobre o seu evento</legend>
-          <label className={styles.campo}>
-            Data
-            <input type="date" value={data} onChange={(e) => setData(e.target.value)} />
-          </label>
+          <div className={styles.campo}>
+            <span>Data</span>
+            <EventAvailabilityCalendar value={data} onChange={setData} />
+          </div>
           <label className={styles.campo}>
             Tipo de evento
             <select value={tipoEvento} onChange={(e) => setTipoEvento(e.target.value as TipoEvento)}>
