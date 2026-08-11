@@ -22,10 +22,3 @@
   margin: 0;
 }
 
-.preco {
-  font-family: var(--font-display);
-  color: var(--wine);
-  font-size: 0.95rem;
-  padding: var(--space-xs) var(--space-sm) var(--space-sm);
-  margin: 0;
-}

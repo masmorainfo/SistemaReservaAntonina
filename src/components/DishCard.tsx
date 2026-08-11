@@ -4,12 +4,11 @@ import styles from "./DishCard.module.css";
 interface DishCardProps {
   nome: string;
   descricao: string;
-  preco: number;
   imagemSrc: string;
   imagemAlt: string;
 }
 
-export function DishCard({ nome, descricao, preco, imagemSrc, imagemAlt }: DishCardProps) {
+export function DishCard({ nome, descricao, imagemSrc, imagemAlt }: DishCardProps) {
   return (
     <article className={styles.card}>
       <Image
@@ -21,7 +20,6 @@ export function DishCard({ nome, descricao, preco, imagemSrc, imagemAlt }: DishC
       />
       <h3 className={styles.nome}>{nome}</h3>
       <p className={styles.descricao}>{descricao}</p>
-      <p className={styles.preco}>R$ {preco.toFixed(2)}</p>
     </article>
   );
 }

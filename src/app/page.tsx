@@ -3,36 +3,31 @@ import Image from "next/image";
 import { SiteNav } from "@/components/SiteNav";
 import { Footer } from "@/components/Footer";
 import { DishCard } from "@/components/DishCard";
+import { CARDAPIO_URL } from "@/lib/constants";
 import styles from "./page.module.css";
-
-const CARDAPIO_URL = "https://cardapio.pedyun.com.br/antoninaosteria";
 
 const PRATOS_DESTAQUE = [
   {
     nome: "Arancini",
     descricao: "Bolinho de risoto com molho de tomate pelado recheado com queijo.",
-    preco: 42,
     imagemSrc: "/images/prato-arancini.jpg",
     imagemAlt: "Arancini servido em prato de madeira",
   },
   {
     nome: "Burrata al Pesto",
     descricao: "Burrata com pesto, raspas de limão siciliano, parma e rúculas. Acompanha torradas.",
-    preco: 98,
     imagemSrc: "/images/prato-burrata.jpg",
     imagemAlt: "Burrata al Pesto com folhas de rúcula",
   },
   {
     nome: "Cacio e Pepe",
     descricao: "Spaghetti tradicional Cacio e Pepe.",
-    preco: 78,
     imagemSrc: "/images/prato-cacio-e-pepe.jpg",
     imagemAlt: "Prato de spaghetti Cacio e Pepe",
   },
   {
     nome: "Banoffee Antonina",
     descricao: "Banoffee feita com doce de leite da casa, farofa crocante com toque de mascarpone.",
-    preco: 42,
     imagemSrc: "/images/prato-banoffee.jpg",
     imagemAlt: "Sobremesa Banoffee Antonina",
   },

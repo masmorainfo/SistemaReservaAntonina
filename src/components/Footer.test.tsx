@@ -35,7 +35,7 @@ describe("Footer", () => {
     const link = screen.getByRole("link", { name: "Cardápio" });
     expect(link).toHaveAttribute(
       "href",
-      "https://cardapio.pedyun.com.br/antoninaosteria"
+      "https://www.vucafood.com.br/antoninaosteria/3522/cardapio-digital"
     );
     expect(link).toHaveAttribute("target", "_blank");
     expect(link).toHaveAttribute("rel", "noopener noreferrer");

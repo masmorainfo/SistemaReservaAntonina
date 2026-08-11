@@ -1,7 +1,6 @@
 import Link from "next/link";
+import { CARDAPIO_URL } from "@/lib/constants";
 import styles from "./SiteNav.module.css";
-
-const CARDAPIO_URL = "https://cardapio.pedyun.com.br/antoninaosteria";
 
 export function SiteNav() {
   return (

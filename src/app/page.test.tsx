@@ -24,7 +24,7 @@ describe("HomePage", () => {
     expect(screen.getByText("Banoffee Antonina")).toBeInTheDocument();
     expect(screen.getByRole("link", { name: "Ver cardápio completo" })).toHaveAttribute(
       "href",
-      "https://cardapio.pedyun.com.br/antoninaosteria"
+      "https://www.vucafood.com.br/antoninaosteria/3522/cardapio-digital"
     );
   });
 
