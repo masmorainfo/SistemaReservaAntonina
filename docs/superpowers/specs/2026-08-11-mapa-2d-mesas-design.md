@@ -14,7 +14,7 @@ Este documento registra o inventário real (levantado com o dono a partir do tou
 
 ## Inventário — Salão Principal
 
-Fixo, sem variação por dia da semana. 11 mesas:
+Fixo, sem variação por dia da semana. 12 mesas:
 
 | Mesa | Formato | Lugares | Zona |
 |---|---|---|---|
@@ -57,7 +57,7 @@ Cada combinação (número, dias ativos, capacidade) é um registro `Mesa` separ
 - 20, 21 (lado direito, todos os dias, mesma capacidade): 1 registro cada, `diasSemanaAtivos` = todos os dias = 2 registros
 - 22, 23 (lado direito, só fim de semana): 1 registro cada = 2 registros
 
-Total Deck: 16 registros de `Mesa`. Total Salão Principal: 11 registros (sem variação de dia, `diasSemanaAtivos` = todos os dias). **Total geral: 27 registros**, substituindo os 3 de placeholder atuais.
+Total Deck: 16 registros de `Mesa`. Total Salão Principal: 12 registros (sem variação de dia, `diasSemanaAtivos` = todos os dias). **Total geral: 28 registros**, substituindo os 3 de placeholder atuais.
 
 ## Design visual
 
@@ -78,6 +78,6 @@ O Deck mostra sempre as 4 posições fixas (topo-esq/topo-dir/baixo-esq/baixo-di
 ## Critérios de aceitação
 
 - As 27 mesas reais (11 Salão + 16 Deck, contando os registros duplicados por dia) existem no banco com número, capacidade e `diasSemanaAtivos` corretos conforme as tabelas acima.
-- O mapa do Salão Principal mostra um desenho esquemático com as 11 mesas posicionadas nos agrupamentos corretos (adega, quadros, entre pilastras, bar).
+- O mapa do Salão Principal mostra um desenho esquemático com as 12 mesas posicionadas nos agrupamentos corretos (adega, quadros, entre pilastras, bar).
 - O mapa do Deck mostra as 4 posições fixas por lado, com o número/capacidade correto trocando automaticamente conforme o dia selecionado no wizard.
 - Nenhuma mudança de schema Prisma é necessária (o campo `posicaoTour` e o índice não-único em `[ambienteId, numero]` já existem).
